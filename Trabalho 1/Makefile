@@ -4,13 +4,13 @@ SDL_LIB = -lSDL2
 SDL_INCLUDE = -I/usr/local/include
 
 CXXFLAGS = -Wall -c $(SDL_INCLUDE)
-LDFLAGS = $(SDL_LIB)
+# LDFLAGS = $(SDL_LIB)
 PROJ_NAME = rcom
 
 OBJS_DIR := obj
 SRCS_DIR := src
 INC_DIR := include
-SRCS_FILES := $(SRCS_DIR)/main.c  
+SRCS_FILES := $(SRCS_DIR)/main.c $(SRCS_DIR)/aux.c 
 
 OBJS_FILES = $(patsubst $(SRCS_DIR)/%.c,$(OBJS_DIR)/%.o, $(SRCS_FILES))
 
