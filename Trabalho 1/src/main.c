@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "aux.h"
+#include "macros.h"
 
 int main(int argc, char *argv[])
 {
@@ -10,7 +11,7 @@ int main(int argc, char *argv[])
 
     // Handle program arguments
     if (argc > 3 || ((strcmp("read", argv[1]) != 0) && (strcmp("write", argv[1]) != 0))) {
-        printf("./rcom <read|write> <port> \n");
+        printf("Usage: ./rcom <read|write> <port> \n");
         return 1;
     }    
     else {
@@ -22,7 +23,7 @@ int main(int argc, char *argv[])
         strcpy(port, argv[2]);
     }
 
-    printf("Port: %s", port);
+    printf("Port: %s\n", port);
     printf("operation: %s", operation);
     printf("\n");
 

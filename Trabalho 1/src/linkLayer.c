@@ -1,0 +1,26 @@
+#include "linkLayer.h"
+
+
+int llopen(int porta, int mode)
+{
+
+    return 0;
+}
+
+int llclose(int fd)
+{
+
+    return 0;
+}
+
+int llread(int fd, char * buffer)
+{
+
+    return 0;
+}
+
+int llwrite(int fd, char *buffer, int length)
+{
+
+    return 0;
+}
