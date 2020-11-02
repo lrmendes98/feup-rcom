@@ -1,31 +1,37 @@
-#include <stdio.h>
-#include <string.h>
-#include "aux.h"
 #include "macros.h"
+#include "linkLayer.h"
 
 int main(int argc, char *argv[])
 {
-    char operation[100] = "";
-    char port[100] = "";
-
+    int operation = -1;
 
     // Handle program arguments
-    if (argc > 3 || ((strcmp("read", argv[1]) != 0) && (strcmp("write", argv[1]) != 0))) {
+    if (argc == 1) {
+        printf("Usage: ./rcom <read|write> <port> \n");
+        return 1;
+    }
+    else if(argc > 3 || ((strcmp("read", argv[1]) != 0) && (strcmp("write", argv[1]) != 0))) {
         printf("Usage: ./rcom <read|write> <port> \n");
         return 1;
     }    
     else {
         if (strcmp("read", argv[1]) == 0)
-		    strcpy(operation, "TRANSMITTER");
+		    operation = TRANSMITTER;
         if (strcmp("write", argv[1]) == 0)
-            strcpy(operation, "RECEIVER");
-
-        strcpy(port, argv[2]);
+            operation = RECEIVER;
     }
 
-    printf("Port: %s\n", port);
-    printf("operation: %s", operation);
+    printf("Port: %s\n", argv[2]);
+    printf("operation: %i", operation);
     printf("\n");
+
+    int fd = llopen(argv[2], operation);
+
+    // if (operation == TRANSMITTER)
+    //     appLayerWrite(fd);
+    // else if (operation == RECEIVER)
+    //     appLayerRead(fd);
+    
 
     return 0;
 }
