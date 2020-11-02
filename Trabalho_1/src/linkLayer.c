@@ -30,10 +30,11 @@ int llread(int fd, char* buffer)
 
     while(1) {
         res = read(fd,buffer,255);
-        buffer[res]='\0';             /* set end of string, so we can printf */
-        for (i = 0; i < res; i++) printf("%c", buffer[i]);
-        printf("\n");
-        if (buffer[0] == 'z');
+        // buffer[res]='\0';             /* set end of string, so we can printf */
+        // for (i = 0; i < res; i++) printf("%c", buffer[i]);
+        // printf("\n");
+        // if (buffer[0] == 'z');
+        printf("buffer: %s", buffer);
     }
 
     return 0;
@@ -51,12 +52,7 @@ int llwrite(int fd, char* buffer, int length)
 
 int llopenTransmitter(int fd)
 {
-    char buf[255];
-
-    for (int i = 0; i < 254; i++) buf[i] = 'a' + i % 26;
-    buf[254] = '\n';
-
-    llwrite(fd, buf, 255);
+    
     return 0;
 }
 
