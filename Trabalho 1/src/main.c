@@ -8,17 +8,17 @@ int main(int argc, char *argv[])
     // Handle program arguments
     if (argc == 1) {
         printf("Usage: ./rcom <read|write> <port> \n");
-        return 1;
+        return -1;
     }
     else if(argc > 3 || ((strcmp("read", argv[1]) != 0) && (strcmp("write", argv[1]) != 0))) {
         printf("Usage: ./rcom <read|write> <port> \n");
-        return 1;
+        return -1;
     }    
     else {
         if (strcmp("read", argv[1]) == 0)
-		    operation = TRANSMITTER;
+		    operation = RECEIVER;
         if (strcmp("write", argv[1]) == 0)
-            operation = RECEIVER;
+            operation = TRANSMITTER;
     }
 
     printf("Port: %s\n", argv[2]);
