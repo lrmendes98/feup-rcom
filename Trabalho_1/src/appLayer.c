@@ -1,5 +1,4 @@
 #include "appLayer.h"
-#include "aux.h"
 
 int appLayerWrite(int fd)
 {
@@ -13,7 +12,7 @@ int appLayerWrite(int fd)
     buffer = getFileBinary("testFiles/meme.png");
 
     llwrite(fd, buffer, sizeof(buffer));
-
+    
     return 0;
 }
 

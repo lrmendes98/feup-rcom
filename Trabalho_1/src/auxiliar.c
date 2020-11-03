@@ -1,4 +1,4 @@
-#include "aux.h"
+#include "auxiliar.h"
 
 char* stringAdd(const char *s1, const char *s2)
 {
@@ -13,20 +13,25 @@ char* stringAdd(const char *s1, const char *s2)
 
 char* getFileBinary(char* path)
 {
-    char buffer[999999];
     FILE *filePtr;
     filePtr = fopen(path,"rb");
 
 	if (!filePtr) {
-		printf("Unable to open file!");
+		printf("Unable to open file!\n");
 		return "";
     }
-		
-	fread(&buffer,sizeof(buffer),1,filePtr);
+
+    long fs;
+    
+    fseek(filePtr, 0L, SEEK_END);
+    char * buffer;
+    fs = ftell(filePtr);
+    buffer = malloc(sizeof(char) * fs); 
+    fseek(filePtr, 0L, SEEK_SET);
+
+    fread (buffer, 1, fs, filePtr);
 		
 	fclose(filePtr);
-
-    printf("%s", buffer);
 
     return buffer;
 }
