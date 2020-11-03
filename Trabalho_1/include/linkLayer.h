@@ -9,15 +9,36 @@
 #include <fcntl.h>  
 #include <unistd.h>
 #include "macros.h"
+#include <termios.h>
+#include "auxiliar.h"
+
+
+/* Global Variables */
+extern struct termios oldtio;
 
 
 int llopen(char* porta, int mode);
 
+/* Closes port
+** @param fd: File descriptor
+** @return: if successful, 1, if not, -1
+*/
 int llclose(int fd);
 
 int llread(int fd, char* buffer);
 
+/* Sends array buffer 
+** @param fd: File descriptor
+** @param buffer: pointer of buffer to send
+** @param length: length of buffer
+** @return: if successful, number of characters written, if not, -1
+*/
 int llwrite(int fd, char* buffer, int length);
+
+
+int setOldPortAttributes(int fd);
+
+int getAndSaveOldPortAttributes(int fd);
 
 int llopenTransmitter(int fd);
 

@@ -10,6 +10,19 @@
 
 char* stringAdd(const char *s1, const char *s2);
 
-char* getFileBinary(char* path);
+long getFileBinary(char *path, char** buffer);
 
 char* generateRdmBytestream(size_t num_bytes);
+
+char* printError(char* msg);
+
+char* printWarning(char* msg);
+
+char* printSuccess(char* msg);
+
+/* Creates a file with received binary
+** @param path: New file path
+** @param content: New file binary
+*/
+int exportFile(char* path, char** content); 
+

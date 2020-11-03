@@ -2,18 +2,14 @@
 
 int appLayerWrite(int fd)
 {
-    // Write random bytes
-    // char buf[255];
-    // for (int i = 0; i < 254; i++) buf[i] = 'a' + i % 26;
-    // buf[254] = '\n';
+    char *buffer;
+    long bufferSize = 0;
+    bufferSize = getFileBinary("testFiles/pinguim.gif", &buffer);
 
-    char* buffer;
+    llwrite(fd, buffer, bufferSize);
 
-    //buffer = getFileBinary("testFiles/meme.png");
-
-    buffer = generateRdmBytestream(254);
-
-    llwrite(fd, buffer, sizeof(buffer));
+    free(buffer);
+    buffer = NULL;
     
     return 0;
 }
@@ -21,12 +17,12 @@ int appLayerWrite(int fd)
 int appLayerRead(int fd)
 {
     char* buffer;
-
     // Read bytes
     llread(fd, buffer);
 
+    exportFile("receivedFiles/pinguim.gif", &buffer);
 
-    
+
     return 0;
 }
 

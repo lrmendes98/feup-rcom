@@ -1,5 +1,4 @@
 #include "macros.h"
-#include "linkLayer.h"
 #include "appLayer.h"
 
 int main(int argc, char *argv[])
@@ -22,18 +21,15 @@ int main(int argc, char *argv[])
             operation = TRANSMITTER;
     }
 
-    printf("Port: %s\n", argv[2]);
-    printf("operation: %i", operation);
-    printf("\n");
-
     // Open port
     int fd = llopen(argv[2], operation);
 
     if (operation == TRANSMITTER)
         appLayerWrite(fd);
     else if (operation == RECEIVER)
-        appLayerRead(fd);
-    
+        appLayerRead(fd);  
+
+    llclose(fd);  
 
     return 0;
 }
