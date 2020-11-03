@@ -9,7 +9,9 @@ int appLayerWrite(int fd)
 
     char* buffer;
 
-    buffer = getFileBinary("testFiles/meme.png");
+    //buffer = getFileBinary("testFiles/meme.png");
+
+    buffer = generateRdmBytestream(254);
 
     llwrite(fd, buffer, sizeof(buffer));
     

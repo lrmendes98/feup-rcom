@@ -35,3 +35,16 @@ char* getFileBinary(char* path)
 
     return buffer;
 }
+
+char* generateRdmBytestream(size_t num_bytes)
+{
+  char *stream = malloc (num_bytes);
+  size_t i;
+
+  for (i = 0; i < num_bytes; i++)
+  {
+    stream[i] = rand ();
+  }
+
+  return stream;
+}

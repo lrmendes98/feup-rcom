@@ -34,7 +34,7 @@ int llread(int fd, char* buffer)
         // for (i = 0; i < res; i++) printf("%c", buffer[i]);
         // printf("\n");
         // if (buffer[0] == 'z');
-        printf("buffer: %s", buffer);
+        printf("buffer: %s\n", buffer);
     }
 
     return 0;
