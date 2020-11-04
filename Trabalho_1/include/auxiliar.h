@@ -20,7 +20,7 @@ char* printWarning(char* msg);
 
 char* printSuccess(char* msg);
 
-/* Creates a file with received binary
+/* Creates a file with received content (binary)
 ** @param path: New file path
 ** @param content: New file binary
 */

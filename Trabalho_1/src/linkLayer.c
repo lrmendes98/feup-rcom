@@ -17,6 +17,38 @@ int llopen(char* porta, int mode)
     // Set port attributes and save old ones
     getAndSaveOldPortAttributes(fd);
 
+    struct termios newtio;
+    
+    /*
+    Open serial port device for reading and writing and not as controlling tty
+    because we don't want to get killed if linenoise sends CTRL-C.
+    */
+
+    bzero(&newtio, sizeof(newtio));
+    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
+    newtio.c_iflag = IGNPAR;
+    newtio.c_oflag = 0;
+
+    /* set input mode (non-canonical, no echo,...) */
+    newtio.c_lflag = 0;
+
+    newtio.c_cc[VTIME] = 0;   /* inter-character timer unused */
+    newtio.c_cc[VMIN] = 5;   /* blocking read until 5 chars received */
+
+    /* 
+    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
+    leitura do(s) proximo(s) caracter(es)
+    */
+
+    tcflush(fd, TCIOFLUSH);
+
+    if (tcsetattr(fd,TCSANOW,&newtio) == -1) {
+      perror("tcsetattr");
+      exit(-1);
+    }
+
+    printSuccess("New termios structure set");
+
     if (mode == RECEIVER)
         llopenReceiver(fd);
     else if (mode == TRANSMITTER)
@@ -77,68 +109,16 @@ int getAndSaveOldPortAttributes(int fd)
 
 int llopenTransmitter(int fd)
 {
-    struct termios newtio;
-    
-    /*
-    Open serial port device for reading and writing and not as controlling tty
-    because we don't want to get killed if linenoise sends CTRL-C.
-    */
-
-    bzero(&newtio, sizeof(newtio));
-    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
-    newtio.c_iflag = IGNPAR;
-    newtio.c_oflag = 0;
-
-    /* set input mode (non-canonical, no echo,...) */
-    newtio.c_lflag = 0;
-
-    newtio.c_cc[VTIME] = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN] = 5;   /* blocking read until 5 chars received */
-
-    /* 
-    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) proximo(s) caracter(es)
-    */
-
-    tcflush(fd, TCIOFLUSH);
-
-    if (tcsetattr(fd,TCSANOW,&newtio) == -1) {
-      perror("tcsetattr");
-      exit(-1);
-    }
-
-    printSuccess("New termios structure set");
+    // Send SET frame
    
     return 0;
 }
 
 int llopenReceiver(int fd)
 {
-    struct termios newtio;
+    // read frames
 
-    bzero(&newtio, sizeof(newtio));
-    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
-    newtio.c_iflag = IGNPAR;
-    newtio.c_oflag = 0;
-
-    /* set input mode (non-canonical, no echo,...) */
-    newtio.c_lflag = 0;
-
-    newtio.c_cc[VTIME] = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN] = 5;   /* blocking read until 5 chars received */
-    //newtio.c_cc[VMIN] = 0;
-
-  /* VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) proximo(s) caracter(es)
-    tcflush(fd, TCIOFLUSH);
-  */
-
-    if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
-      printError("tcsetattr has failed!");
-      exit(-1);
-    }
-   
-    printSuccess("New termios structure set");
+    //if frame == SET frame, send ACK frame, else, send REJ frame
 
     return 0;
 }

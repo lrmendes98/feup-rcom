@@ -8,9 +8,27 @@
 #include <sys/stat.h>
 #include <fcntl.h>  
 #include <unistd.h>
-#include "macros.h"
+#include <stdbool.h>
 #include <termios.h>
+#include "macros.h"
 #include "auxiliar.h"
+
+
+struct InformationFrame {
+    u_int8_t flag;
+    u_int8_t addressField;
+    u_int8_t controlField;
+    u_int8_t headerProtectionField;
+    char* informationField;  
+    u_int8_t bodyProtectionField;
+};
+
+struct SupervisionAndNNFrame {
+    u_int8_t flag;
+    u_int8_t addressField;
+    u_int8_t controlField;
+    u_int8_t headerProtectionField;
+};
 
 
 /* Global Variables */
@@ -35,6 +53,9 @@ int llread(int fd, char* buffer);
 */
 int llwrite(int fd, char* buffer, int length);
 
+unsigned char buildInformationFrame(struct InformationFrame);
+
+unsigned char buildSupervisionAndNNFrame(struct SupervisionAndNNFrame);
 
 int setOldPortAttributes(int fd);
 
@@ -43,3 +64,4 @@ int getAndSaveOldPortAttributes(int fd);
 int llopenTransmitter(int fd);
 
 int llopenReceiver(int fd);
+

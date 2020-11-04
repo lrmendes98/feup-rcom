@@ -5,9 +5,7 @@ int appLayerWrite(int fd)
     char *buffer;
     long bufferSize = 0;
     bufferSize = getFileBinary("testFiles/pinguim.gif", &buffer);
-
     llwrite(fd, buffer, bufferSize);
-
     free(buffer);
     buffer = NULL;
     
@@ -16,7 +14,7 @@ int appLayerWrite(int fd)
 
 int appLayerRead(int fd)
 {
-    char* buffer;
+    char* buffer = NULL;
     // Read bytes
     llread(fd, buffer);
 
@@ -25,4 +23,3 @@ int appLayerRead(int fd)
 
     return 0;
 }
-
