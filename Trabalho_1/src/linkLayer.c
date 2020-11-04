@@ -3,7 +3,15 @@
 
 /* Global Variables */
 struct termios oldtio;
+unsigned int counterTries = 0;
+bool hasTimedOut = false;
 
+void atende()
+{
+    printWarning("Timeout #");
+    counterTries++;
+    printf("%i \n", counterTries);
+}
 
 int setOldPortAttributes(int fd) {
     if (tcsetattr(fd,TCSANOW,&oldtio) == -1) {
@@ -26,8 +34,34 @@ int getAndSaveOldPortAttributes(int fd)
 
 int llopenTransmitter(int fd)
 {
-    // Send SET frame
-    write(fd, &FRAME_SET, sizeof(FRAME_SET));
+    int currentCount = 0;
+    char buffer[FRAME_SUPERVISION_SIZE];
+
+    write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
+
+    alarm(TIMEOUT);    
+    
+    while(counterTries < MAXTRIES) {
+
+        if (currentCount != counterTries) {
+            currentCount = counterTries;
+            alarm(TIMEOUT);
+            write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
+        }
+        
+        int readSize = read(fd, &buffer, FRAME_SUPERVISION_SIZE);
+        if (readSize == FRAME_SUPERVISION_SIZE) {
+            break;
+        }
+
+    }
+
+    if (counterTries == MAXTRIES) {
+        printError("Exceeded MAXTRIES!\n");
+        return -1;
+    }
+
+    printSuccess("has exited successfully!\n");    
    
     return 0;
 }
@@ -36,11 +70,22 @@ int llopenReceiver(int fd)
 {
     // read frames
     char buffer[sizeof(FRAME_SET)];
-    read(fd, &buffer, sizeof(FRAME_SET));
-
-    if (strcmp(buffer, (const char *)FRAME_SET) == 0)
-        printSuccess("Received SET");
     
+    int readSize = 0;
+
+    while(readSize != FRAME_SUPERVISION_SIZE) {
+        readSize = read(fd, &buffer, sizeof(FRAME_SET));
+    }
+    
+    if (strcmp(buffer, (const char *)FRAME_SET) == 0) {
+        printSuccess("Received SET");
+        // Send UA
+        write(fd, FRAME_UA, sizeof(FRAME_UA));        
+    }
+    else {
+        printError("Rejected Link!");
+        write(fd, FRAME_REJ0, sizeof(FRAME_REJ0));
+    }
 
     //if frame == SET frame, send ACK frame, else, send REJ frame
 
@@ -60,27 +105,16 @@ int llopen(char* porta, int mode)
     getAndSaveOldPortAttributes(fd);
 
     struct termios newtio;
-    
-    /*
-    Open serial port device for reading and writing and not as controlling tty
-    because we don't want to get killed if linenoise sends CTRL-C.
-    */
 
     bzero(&newtio, sizeof(newtio));
     newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
     newtio.c_oflag = 0;
 
-    /* set input mode (non-canonical, no echo,...) */
     newtio.c_lflag = 0;
 
-    newtio.c_cc[VTIME] = 0;   /* inter-character timer unused */
-    newtio.c_cc[VMIN] = 5;   /* blocking read until 5 chars received */
-
-    /* 
-    VTIME e VMIN devem ser alterados de forma a proteger com um temporizador a 
-    leitura do(s) proximo(s) caracter(es)
-    */
+    newtio.c_cc[VTIME] = 0;
+    newtio.c_cc[VMIN] = 0;
 
     tcflush(fd, TCIOFLUSH);
 
@@ -89,12 +123,16 @@ int llopen(char* porta, int mode)
       exit(-1);
     }
 
-    printSuccess("New termios structure set");
+    printSuccess("New termios structure set\n");
+
+    (void) signal(SIGALRM, atende);  // instala rotina que atende interrupcao
 
     if (mode == RECEIVER)
         llopenReceiver(fd);
     else if (mode == TRANSMITTER)
         llopenTransmitter(fd);
+
+    alarm(0);
 
     return fd;
 }

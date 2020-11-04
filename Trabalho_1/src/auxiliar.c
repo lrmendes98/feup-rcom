@@ -66,21 +66,21 @@ char* generateRdmBytestream(size_t num_bytes)
 char* printError(char* msg)
 {
   printf("%s", stringAdd("\033[1;31m", msg));
-  printf("\033[0m\n"); // reset normal color
+  printf("\033[0m"); // reset normal color
   return 0;
 }
 
 char* printWarning(char* msg)
 {
   printf("%s", stringAdd("\033[1;33m", msg));
-  printf("\033[0m\n"); // reset normal color
+  printf("\033[0m"); // reset normal color
   return 0;
 }
 
 char* printSuccess(char* msg)
 {
   printf("%s", stringAdd("\033[1;32m", msg));
-  printf("\033[0m\n"); // reset normal color
+  printf("\033[0m"); // reset normal color
   return 0;
 }
 

@@ -26,7 +26,8 @@ static const unsigned char FRAME_UA[] = {FRAME_FLAG,
                                         (FRAME_ADDRESS_FIELD_TYPE1 ^ FRAME_CONTROL_FIELD_UA),
                                         FRAME_FLAG};
 
-static const unsigned char FRAME_REJ0[] = {FRAME_FLAG, FRAME_ADDRESS_FIELD_TYPE1, 
+static const unsigned char FRAME_REJ0[] = {FRAME_FLAG, 
+                                        FRAME_ADDRESS_FIELD_TYPE1, 
                                         FRAME_CONTROL_FIELD_REJ0,
                                         (FRAME_ADDRESS_FIELD_TYPE1^FRAME_CONTROL_FIELD_REJ0),
                                         FRAME_FLAG};

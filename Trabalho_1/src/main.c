@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
         if (strcmp("write", argv[1]) == 0)
             operation = TRANSMITTER;
     }
-
+    
     // Open port
     int fd = llopen(argv[2], operation);
 

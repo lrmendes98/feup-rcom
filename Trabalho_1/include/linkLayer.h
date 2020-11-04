@@ -10,13 +10,18 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <termios.h>
+#include <signal.h>
+
 #include "macros.h"
 #include "auxiliar.h"
 #include "frame.h"
 
 /* Global Variables */
 extern struct termios oldtio;
+extern unsigned int counterTries;
 
+/* atende alarme */
+void atende();
 
 int setOldPortAttributes(int fd);
 
