@@ -5,6 +5,48 @@
 struct termios oldtio;
 
 
+int setOldPortAttributes(int fd) {
+    if (tcsetattr(fd,TCSANOW,&oldtio) == -1) {
+      printError("tcsetattr has failed!");
+      exit(-1);
+    }
+    return 1;
+}
+
+int getAndSaveOldPortAttributes(int fd)
+{
+    // save current port settings
+    if (tcgetattr(fd, &oldtio) == -1) { 
+      perror("tcgetattr has failed!");
+      exit(-1);
+    }
+
+    return 1;
+}
+
+int llopenTransmitter(int fd)
+{
+    // Send SET frame
+    write(fd, &FRAME_SET, sizeof(FRAME_SET));
+   
+    return 0;
+}
+
+int llopenReceiver(int fd)
+{
+    // read frames
+    char buffer[sizeof(FRAME_SET)];
+    read(fd, &buffer, sizeof(FRAME_SET));
+
+    if (strcmp(buffer, (const char *)FRAME_SET) == 0)
+        printSuccess("Received SET");
+    
+
+    //if frame == SET frame, send ACK frame, else, send REJ frame
+
+    return 0;
+}
+
 int llopen(char* porta, int mode)
 {
     int fd = open(porta, O_RDWR | O_NOCTTY);
@@ -86,39 +128,4 @@ int llwrite(int fd, char* buffer, int length)
     printf("Bytes written = %d\n", bytes);
     
     return length;
-}
-
-int setOldPortAttributes(int fd) {
-    if (tcsetattr(fd,TCSANOW,&oldtio) == -1) {
-      printError("tcsetattr has failed!");
-      exit(-1);
-    }
-    return 1;
-}
-
-int getAndSaveOldPortAttributes(int fd)
-{
-    // save current port settings
-    if (tcgetattr(fd, &oldtio) == -1) { 
-      perror("tcgetattr has failed!");
-      exit(-1);
-    }
-
-    return 1;
-}
-
-int llopenTransmitter(int fd)
-{
-    // Send SET frame
-   
-    return 0;
-}
-
-int llopenReceiver(int fd)
-{
-    // read frames
-
-    //if frame == SET frame, send ACK frame, else, send REJ frame
-
-    return 0;
 }

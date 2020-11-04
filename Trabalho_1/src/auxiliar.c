@@ -1,5 +1,6 @@
 #include "auxiliar.h"
 
+
 int exportFile(char* path, char** content) 
 {
 	FILE *ptr_myfile;

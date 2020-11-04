@@ -24,10 +24,10 @@ int main(int argc, char *argv[])
     // Open port
     int fd = llopen(argv[2], operation);
 
-    if (operation == TRANSMITTER)
-        appLayerWrite(fd);
-    else if (operation == RECEIVER)
-        appLayerRead(fd);  
+    // if (operation == TRANSMITTER)
+    //     appLayerWrite(fd);
+    // else if (operation == RECEIVER)
+    //     appLayerRead(fd);  
 
     llclose(fd);  
 

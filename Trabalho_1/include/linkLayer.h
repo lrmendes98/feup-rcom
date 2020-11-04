@@ -12,28 +12,19 @@
 #include <termios.h>
 #include "macros.h"
 #include "auxiliar.h"
-
-
-struct InformationFrame {
-    u_int8_t flag;
-    u_int8_t addressField;
-    u_int8_t controlField;
-    u_int8_t headerProtectionField;
-    char* informationField;  
-    u_int8_t bodyProtectionField;
-};
-
-struct SupervisionAndNNFrame {
-    u_int8_t flag;
-    u_int8_t addressField;
-    u_int8_t controlField;
-    u_int8_t headerProtectionField;
-};
-
+#include "frame.h"
 
 /* Global Variables */
 extern struct termios oldtio;
 
+
+int setOldPortAttributes(int fd);
+
+int getAndSaveOldPortAttributes(int fd);
+
+int llopenTransmitter(int fd);
+
+int llopenReceiver(int fd);
 
 int llopen(char* porta, int mode);
 
@@ -52,16 +43,3 @@ int llread(int fd, char* buffer);
 ** @return: if successful, number of characters written, if not, -1
 */
 int llwrite(int fd, char* buffer, int length);
-
-unsigned char buildInformationFrame(struct InformationFrame);
-
-unsigned char buildSupervisionAndNNFrame(struct SupervisionAndNNFrame);
-
-int setOldPortAttributes(int fd);
-
-int getAndSaveOldPortAttributes(int fd);
-
-int llopenTransmitter(int fd);
-
-int llopenReceiver(int fd);
-
