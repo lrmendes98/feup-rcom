@@ -21,8 +21,9 @@ extern struct termios oldtio;
 extern unsigned int counterTries;
 
 
-
-/* atende alarme */
+/** 
+ * Answers SIGALRM interrupts, increments counterTries
+ */
 void atende();
 
 /**
@@ -53,6 +54,12 @@ int llopenTransmitter(int fd);
 */
 int llopenReceiver(int fd);
 
+/**
+ * Opens and establishes serial port connections
+ * @param porta: String of port path
+ * @param mode: RECEIVER or TRANSMITTER
+ * @return: If succeeded, returns port file descriptor. If fails, returns negative
+ */
 int llopen(char* porta, int mode);
 
 /** 
@@ -62,6 +69,12 @@ int llopen(char* porta, int mode);
 */
 int llclose(int fd);
 
+/**
+ * Reads port
+ * @param fd: Port file descriptor
+ * @param buffer: Array of received chars
+ * @return: If succeeded, returns number of received chars. If fails, returns negative
+ */
 int llread(int fd, char* buffer);
 
 /** 
