@@ -76,3 +76,5 @@ struct InformationFrame {
  * @return: 1 if successful, 0 if not
 */
 int checkIfIsFrame(char* buffer, const unsigned char* targetFrame, int verbose);
+
+int printFrame(char frame[], int frameSize);

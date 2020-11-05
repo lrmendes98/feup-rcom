@@ -21,6 +21,8 @@ extern struct termios oldtio;
 extern unsigned int counterTries;
 
 
+//int receiveFrame(int fd, char* buffer);
+
 /** 
  * Answers SIGALRM interrupts, increments counterTries
  */

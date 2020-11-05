@@ -16,3 +16,15 @@ int checkIfIsFrame(char* buffer, const unsigned char* targetFrame, int verbose)
 
     return isEqual;
 }
+
+int printFrame(char frame[], int frameSize)
+{
+    char* ptr = frame;
+    for (int i = 0; i < frameSize; i++) {
+        u_int8_t uns = *ptr;
+        printf("Byte %i: %X \n", i, uns);
+        ptr++;
+    }
+
+    return 0;
+}

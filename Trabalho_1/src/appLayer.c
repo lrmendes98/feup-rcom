@@ -2,23 +2,24 @@
 
 int appLayerWrite(int fd)
 {
-    char *buffer;
+    char *buffer = "";
     long bufferSize = 0;
-    bufferSize = getFileBinary("testFiles/pinguim.gif", &buffer);
+    // bufferSize = getFileBinary("testFiles/pinguim.gif", &buffer);
     llwrite(fd, buffer, bufferSize);
-    free(buffer);
-    buffer = NULL;
+    // free(buffer);
+    // buffer = NULL;
+
     
     return 0;
 }
 
 int appLayerRead(int fd)
 {
-    char* buffer = NULL;
+    char buffer[10000];
     // Read bytes
     llread(fd, buffer);
 
-    exportFile("receivedFiles/pinguim.gif", &buffer);
+    //exportFile("receivedFiles/pinguim.gif", &buffer);
 
 
     return 0;

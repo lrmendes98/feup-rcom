@@ -83,4 +83,3 @@ char* printSuccess(char* msg)
   printf("\033[0m"); // reset normal color
   return 0;
 }
-
