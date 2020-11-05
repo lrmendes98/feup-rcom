@@ -6,6 +6,52 @@ struct termios oldtio;
 unsigned int counterTries = 0;
 
 
+int receiveFrame(int fd, char* buffer)
+{
+    char bufferAux;
+    char* bufferPtr = buffer;    
+    
+    int readSize = 0;
+    int close = 0;
+
+    while (!close) {
+        while(readSize != 1) {
+            readSize = read(fd, &bufferAux, 1);
+        }
+
+        // check if incoming byte is frame starter flag
+        if (bufferAux == FRAME_FLAG) {
+            while(1) {
+                *bufferPtr = bufferAux;
+                bufferPtr++;
+                read(fd, &bufferAux, 1); 
+                if(bufferAux == FRAME_FLAG) {
+                    *bufferPtr = bufferAux;
+                    bufferPtr++;
+                    read(fd, &bufferAux, 1); 
+                    break;
+                } 
+
+                // TODO: Caso não receba, fazer qualquer coisa com timeouts              
+            }        
+            close = 1;              
+        }
+
+        else 
+            continue;
+    }
+
+    printFrame(buffer, 5);
+
+    // if (checkIfIsFrame(buffer, FRAME_REJ0, 0)) {
+    //     printf("is the samee!\n");
+    // }
+    // else 
+    //     printf("Not the same! \n");
+
+    return 1;
+}
+
 void atende()
 {
     printWarning("Timeout #");
@@ -162,49 +208,9 @@ int llclose(int fd)
 
 int llread(int fd, char* buffer)
 {   
-    char bufferAux;
-    char bufferAux2[10000];
-    char* bufferPtr = bufferAux2;    
+    char bufferAux[10000];
     
-    int readSize = 0;
-    int close = 0;
-    // int detectedEndFlag = 0;
-
-    while (!close) {
-        while(readSize != 1) {
-            readSize = read(fd, &bufferAux, 1);
-        }
-
-        // check if is frame starter flag
-        if (bufferAux == FRAME_FLAG) {
-            printSuccess("Starter flag detected!\n");
-            printWarning("DEBUG \n");
-
-            while(1) {
-                *bufferPtr = bufferAux;
-                bufferPtr++;
-                read(fd, &bufferAux, 1); 
-                if(bufferAux == FRAME_FLAG) {
-                    *bufferPtr = bufferAux;
-                    bufferPtr++;
-                    read(fd, &bufferAux, 1); 
-                    break;
-                }               
-            }        
-            close = 1;              
-        }
-        else 
-            continue;
-    }
-
-    printFrame(bufferAux2, 5);
-
-    if (checkIfIsFrame(bufferAux2, FRAME_REJ0, 0)) {
-        printf("is the samee!\n");
-    }
-    else 
-        printf("Not the same! \n");
-    
+    receiveFrame(fd, bufferAux);
     
     // // tries to read frame
     // while(1) {

@@ -20,8 +20,17 @@
 extern struct termios oldtio;
 extern unsigned int counterTries;
 
-
-//int receiveFrame(int fd, char* buffer);
+/**
+ * Receives a frame
+ * Reads the port until a start flag is detected.
+ * If so, it allocates each read byte into the buffer until a new 
+ * frame flag is detected, meaning it's the end of that frame
+ * TODO: if doesn't receive end flag, do something
+ * @param fd: Port file descriptor
+ * @param buffer: Buffer with the received frame
+ * @return: 1 if succeeded, -1 if fails
+ */
+int receiveFrame(int fd, char* buffer);
 
 /** 
  * Answers SIGALRM interrupts, increments counterTries
