@@ -67,4 +67,12 @@ struct InformationFrame {
 };
 
 
-unsigned char buildInformationFrame(struct InformationFrame);
+/** 
+ * Checks if buffer is a frame equal to targetFrame
+ * @param buffer: char pointer of array of bytes to be checked
+ * @param targetFrame: frame that buffer must be equal to
+ * @param verbose: if 1(true), prints the bytes that are mismatched, 
+ *                 if 0(false), no prints
+ * @return: 1 if successful, 0 if not
+*/
+int checkIfIsFrame(char* buffer, const unsigned char* targetFrame, int verbose);

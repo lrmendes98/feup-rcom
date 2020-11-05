@@ -5,22 +5,6 @@
 struct termios oldtio;
 unsigned int counterTries = 0;
 
-int checkIfIsFrame(char* buffer, const unsigned char* targetFrame, int verbose)
-{
-    int isEqual = 1;
-    for (int i=0; i<5; i++) {
-        if (!(buffer[i] == targetFrame[i])) {
-            if (verbose) {
-                printf("Frame Byte %i is not the same! \n", i);
-                printf("received byte %x , ", buffer[i]);
-                printf("wanted byte %x \n", targetFrame[i]);
-            }            
-            isEqual = 0;
-        }
-    }
-
-    return isEqual;
-}
 
 int llopenTransmitter(int fd)
 {
@@ -107,28 +91,13 @@ int setOldPortAttributes(int fd)
     return 1;
 }
 
-int getAndSaveOldPortAttributes(int fd)
+int portAttributesHandler(int fd)
 {
     // save current port settings
     if (tcgetattr(fd, &oldtio) == -1) { 
       perror("tcgetattr has failed!");
       exit(-1);
     }
-
-    return 1;
-}
-
-int llopen(char* porta, int mode)
-{
-    int fd = open(porta, O_RDWR | O_NOCTTY);
-
-    if (fd < 0) {
-        printf("Error opening port! %s", porta);
-        return -1;
-    }
-
-    // Set port attributes and save old ones
-    getAndSaveOldPortAttributes(fd);
 
     struct termios newtio;
 
@@ -145,9 +114,24 @@ int llopen(char* porta, int mode)
     tcflush(fd, TCIOFLUSH);
 
     if (tcsetattr(fd,TCSANOW,&newtio) == -1) {
-      perror("tcsetattr");
+      printError("tcsetattr has failed!");
       exit(-1);
     }
+
+    return 1;
+}
+
+int llopen(char* porta, int mode)
+{
+    int fd = open(porta, O_RDWR | O_NOCTTY);
+
+    if (fd < 0) {
+        printf("Error opening port! %s", porta);
+        return -1;
+    }
+
+    // Set port attributes and save old ones
+    portAttributesHandler(fd);
 
     // instala rotina que atende interrupcao
     (void) signal(SIGALRM, atende);
@@ -169,6 +153,7 @@ int llopen(char* porta, int mode)
 
 int llclose(int fd)
 {
+    setOldPortAttributes(fd); 
 
     return 0;
 }

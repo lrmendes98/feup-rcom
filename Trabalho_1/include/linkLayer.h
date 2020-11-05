@@ -20,27 +20,29 @@
 extern struct termios oldtio;
 extern unsigned int counterTries;
 
-/** 
- * Checks if buffer is a frame equal to targetFrame
- * @param buffer: char pointer of array of bytes to be checked
- * @param targetFrame: frame that buffer must be equal to
- * @param verbose: if 1(true), prints the bytes that are mismatched, 
- *                 if 0(false), no prints
- * @return: 1 if successful, 0 if not
-*/
-int checkIfIsFrame(char* buffer, const unsigned char* targetFrame, int verbose);
+
 
 /* atende alarme */
 void atende();
 
+/**
+ * Sets old port attributes
+ * @param fd: Port field descriptor
+ * @returns: 1 if succeeded, if fails, exits program
+ */
 int setOldPortAttributes(int fd);
 
-int getAndSaveOldPortAttributes(int fd);
+/** 
+ * Saves old port attributes and sets new ones
+ * @param fd: Port file descriptor
+ * @returns: 1 if succeeded, if fails, exits program
+ */
+int portAttributesHandler(int fd);
 
 /** 
  * Opens and validates link on the transmitter side
  * @param fd: File descriptor
- * @return: 1 if succedeed, -1 if not
+ * @return: 1 if succeeded, -1 if failed
 */
 int llopenTransmitter(int fd);
 
