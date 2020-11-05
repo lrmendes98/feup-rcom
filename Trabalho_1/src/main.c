@@ -23,6 +23,10 @@ int main(int argc, char *argv[])
     
     // Open port
     int fd = llopen(argv[2], operation);
+    
+    if (fd < 1) 
+        exit(-1);
+    
 
     // if (operation == TRANSMITTER)
     //     appLayerWrite(fd);

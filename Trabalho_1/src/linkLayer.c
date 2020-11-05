@@ -4,7 +4,92 @@
 /* Global Variables */
 struct termios oldtio;
 unsigned int counterTries = 0;
-bool hasTimedOut = false;
+
+int checkIfIsFrame(char* buffer, const unsigned char* targetFrame, int verbose)
+{
+    int isEqual = 1;
+    for (int i=0; i<5; i++) {
+        if (!(buffer[i] == targetFrame[i])) {
+            if (verbose) {
+                printf("Frame Byte %i is not the same! \n", i);
+                printf("received byte %x , ", buffer[i]);
+                printf("wanted byte %x \n", targetFrame[i]);
+            }            
+            isEqual = 0;
+        }
+    }
+
+    return isEqual;
+}
+
+int llopenTransmitter(int fd)
+{
+    int currentCount, readSize = 0;
+    char buffer[FRAME_SUPERVISION_SIZE];
+
+    write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
+
+    alarm(TIMEOUT);    
+    
+    while(counterTries < MAXTRIES) {
+        if (currentCount != counterTries) {
+            currentCount = counterTries;
+            alarm(TIMEOUT);
+            write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
+        }
+        
+        readSize = read(fd, &buffer, FRAME_SUPERVISION_SIZE);
+        
+        if (readSize == FRAME_SUPERVISION_SIZE) 
+            break;
+    }
+
+    if (counterTries == MAXTRIES) {
+        printError("Exceeded MAXTRIES!\n");
+        return -1;
+    }
+
+    if (checkIfIsFrame(buffer, FRAME_UA, 0)) {
+        printSuccess("Received UA! \n");
+        return 1;
+    }
+    else if (checkIfIsFrame(buffer, FRAME_REJ0, 0)) {
+        printError("Received frame is REJ0! \n");
+        return -1;
+    }
+    else {
+        printError("Didn't recognize frame! \n");
+        return -1;
+    }
+      
+    return 1;
+}
+
+int llopenReceiver(int fd)
+{
+    // read frames
+    char buffer[FRAME_SUPERVISION_SIZE];
+    
+    int readSize = 0;
+
+    while(readSize != FRAME_SUPERVISION_SIZE) {
+        readSize = read(fd, &buffer, FRAME_SUPERVISION_SIZE);
+    }
+    
+    if (checkIfIsFrame(buffer, FRAME_SET, 0)) {
+        printSuccess("Received SET\n");
+        // Send UA
+        write(fd, FRAME_UA, FRAME_SUPERVISION_SIZE);    
+        return 1;    
+    }
+    else {
+        printError("Rejected Link!\n");
+        write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);
+        return -1;
+    }
+
+    return 1;
+}
 
 void atende()
 {
@@ -13,7 +98,8 @@ void atende()
     printf("%i \n", counterTries);
 }
 
-int setOldPortAttributes(int fd) {
+int setOldPortAttributes(int fd) 
+{
     if (tcsetattr(fd,TCSANOW,&oldtio) == -1) {
       printError("tcsetattr has failed!");
       exit(-1);
@@ -30,66 +116,6 @@ int getAndSaveOldPortAttributes(int fd)
     }
 
     return 1;
-}
-
-int llopenTransmitter(int fd)
-{
-    int currentCount = 0;
-    char buffer[FRAME_SUPERVISION_SIZE];
-
-    write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
-
-    alarm(TIMEOUT);    
-    
-    while(counterTries < MAXTRIES) {
-
-        if (currentCount != counterTries) {
-            currentCount = counterTries;
-            alarm(TIMEOUT);
-            write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
-        }
-        
-        int readSize = read(fd, &buffer, FRAME_SUPERVISION_SIZE);
-        if (readSize == FRAME_SUPERVISION_SIZE) {
-            break;
-        }
-
-    }
-
-    if (counterTries == MAXTRIES) {
-        printError("Exceeded MAXTRIES!\n");
-        return -1;
-    }
-
-    printSuccess("has exited successfully!\n");    
-   
-    return 0;
-}
-
-int llopenReceiver(int fd)
-{
-    // read frames
-    char buffer[sizeof(FRAME_SET)];
-    
-    int readSize = 0;
-
-    while(readSize != FRAME_SUPERVISION_SIZE) {
-        readSize = read(fd, &buffer, sizeof(FRAME_SET));
-    }
-    
-    if (strcmp(buffer, (const char *)FRAME_SET) == 0) {
-        printSuccess("Received SET");
-        // Send UA
-        write(fd, FRAME_UA, sizeof(FRAME_UA));        
-    }
-    else {
-        printError("Rejected Link!");
-        write(fd, FRAME_REJ0, sizeof(FRAME_REJ0));
-    }
-
-    //if frame == SET frame, send ACK frame, else, send REJ frame
-
-    return 0;
 }
 
 int llopen(char* porta, int mode)
@@ -123,14 +149,18 @@ int llopen(char* porta, int mode)
       exit(-1);
     }
 
-    printSuccess("New termios structure set\n");
+    // instala rotina que atende interrupcao
+    (void) signal(SIGALRM, atende);
 
-    (void) signal(SIGALRM, atende);  // instala rotina que atende interrupcao
-
-    if (mode == RECEIVER)
-        llopenReceiver(fd);
-    else if (mode == TRANSMITTER)
-        llopenTransmitter(fd);
+    if (mode == RECEIVER) {
+        if (llopenReceiver(fd) == -1) 
+            return -1;
+    }
+        
+    else if (mode == TRANSMITTER){
+        if (llopenTransmitter(fd) == -1)
+            return -1;
+    }
 
     alarm(0);
 
