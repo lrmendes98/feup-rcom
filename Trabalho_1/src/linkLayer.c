@@ -13,6 +13,7 @@ int receiveFrame(int fd, char* buffer)
     
     int readSize = 0;
     int close = 0;
+    int receivedFrameSize = 0;
 
     while (!close) {
         while(readSize != 1) {
@@ -22,6 +23,7 @@ int receiveFrame(int fd, char* buffer)
         // check if incoming byte is frame starter flag
         if (bufferAux == FRAME_FLAG) {
             while(1) {
+                receivedFrameSize++;
                 *bufferPtr = bufferAux;
                 bufferPtr++;
                 read(fd, &bufferAux, 1); 
@@ -49,7 +51,7 @@ int receiveFrame(int fd, char* buffer)
     // else 
     //     printf("Not the same! \n");
 
-    return 1;
+    return receivedFrameSize;
 }
 
 void atende()
@@ -208,19 +210,35 @@ int llclose(int fd)
 
 int llread(int fd, char* buffer)
 {   
-    int bufferSize = 20;
+    int bufferSize = 1000;
     char bufferAux[bufferSize];
     //int currentIndex = 1; // O recetor comeca com index 1
+    int test = 1;
+    int close = 0;
+    int receivedFrameSize = 0;
 
-    // Receives Information frame
-    if (receiveFrame(fd, bufferAux)) {
-        printf("Received frame \n");
+    while(!close) {
 
-        // Writes response RR
-        write(fd, FRAME_RR1, FRAME_SUPERVISION_SIZE);
+        // Receives Information frame
+        receivedFrameSize = receiveFrame(fd, bufferAux);
+        if (receivedFrameSize != -1) {
+            printf("Received frame \n");
+
+            // TODO: check if frame has correct BCC and index
+            if (test) {
+                // Writes response RR
+                write(fd, FRAME_RR1, FRAME_SUPERVISION_SIZE);
+                close = 1;
+            }
+            else {
+                // Writes response REJ
+                write(fd, FRAME_REJ1, FRAME_SUPERVISION_SIZE);
+                continue;
+            }            
+        }
     }
 
-    return 0;
+    return receivedFrameSize;
 }
 
 int llwrite(int fd, char* buffer, int length)
@@ -229,29 +247,49 @@ int llwrite(int fd, char* buffer, int length)
 
     int bytesWritten = 0; 
     int close = 0;
-    int sentFrameIndex = 0; // O recetor comeca com index 0
+    int sentFrameIndex = 0; // o recetor comeca com index 0
 
-    // build frame, frame stuffing...
+    // TODO: build frame, frame stuffing...
+    const unsigned char* frameToSend = FRAME_REJ0;
 
     //send frame
-    bytesWritten = write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);
+    bytesWritten = write(fd, frameToSend, FRAME_SUPERVISION_SIZE);
     printf("Bytes written = %d\n", bytesWritten);
 
     while(!close) {
-        // waits for answer
-        if (receiveFrame(fd, responseBuffer)) {
+        // waits for response
+        if (receiveFrame(fd, responseBuffer) != -1) {
             
-            // check received frame index. Received response must be oposite index of send frame
-            if (checkFrameIndex(responseBuffer, sentFrameIndex)) {
+            // checks received frame index. Received response must be oposite index of send frame
+            int receivedIndex = getFrameIndex(responseBuffer);
+            if (receivedIndex != sentFrameIndex) {
                 printSuccess("Correct index! \n");
+                // send ACK
             }
             else {
                 printWarning("Wrong index! \n");
-            }
-            
-               
+                // resend frame
+                bytesWritten = write(fd, frameToSend, FRAME_SUPERVISION_SIZE);
+            }   
 
-            close = 1;            
+            // check if received response is RR or REJ    
+            if (checkIfIsFrame(responseBuffer, FRAME_RR0, 0) ||
+                checkIfIsFrame(responseBuffer, FRAME_RR1, 0)) 
+            {
+                printSuccess("Received RR\n");
+                close = 1;
+            }
+            else if (checkIfIsFrame(responseBuffer, FRAME_REJ0, 0) ||
+                checkIfIsFrame(responseBuffer, FRAME_REJ1, 0)) 
+            {
+                printError("Received REJ\n");
+                // resend frame
+                bytesWritten = write(fd, frameToSend, FRAME_SUPERVISION_SIZE);
+            }
+            else {
+                printError("Received something other that RR or REJ! \n");
+                return -1;
+            }            
         }
         else {
             // if receiveFrame has failed, send REJ frame
@@ -262,5 +300,5 @@ int llwrite(int fd, char* buffer, int length)
     // printf("Bytes written = %d\n", bytesWritten);
     // printFrame((char*) FRAME_REJ0, FRAME_SUPERVISION_SIZE);
     
-    return length;
+    return bytesWritten;
 }

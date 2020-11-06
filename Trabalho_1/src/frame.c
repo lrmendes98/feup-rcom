@@ -33,39 +33,23 @@ int printFrame(char frame[], int frameSize)
     return 0;
 }
 
-int checkFrameIndex(char responseBuffer[], int sentFrameIndex)
+int getFrameIndex(char frame[]) 
 {
-    // sent index frame must be opposite of the index of the received response
-    if (sentFrameIndex == 0) {
-        if (checkIfIsFrame(responseBuffer, FRAME_RR1, 0)) {
-            printSuccess("Received RR! \n"); 
-            return 1;
-        }
-        else if (checkIfIsFrame(responseBuffer, FRAME_REJ1, 0)) {
-            printError("Received REJ! \n");
-            return 1;
-        }
-        else {
-            printError("Out of order! \n");
-            return 0;
-        }  
+    // if is supervision frame
+    if (checkIfIsFrame(frame, FRAME_RR0, 0) || 
+            checkIfIsFrame(frame, FRAME_REJ0, 0)) {
+        return 0;
     }
-    else if (sentFrameIndex == 1) {
-        if (checkIfIsFrame(responseBuffer, FRAME_RR0, 0)) {
-            printSuccess("Received RR! \n"); 
-            return 1;
-        }
-        else if (checkIfIsFrame(responseBuffer, FRAME_REJ0, 0)) {
-            printError("Received REJ! \n");
-            return 1;
-        }
-        else {
-            printError("Out of order! \n");
-            return 0;
-        }
-    } 
+    if (checkIfIsFrame(frame, FRAME_RR1, 0) || 
+            checkIfIsFrame(frame, FRAME_REJ1, 0)) {
+        return 1;
+    }
 
-    return 0;
+    // TODO: if is information frame...
+
+
+
+    return -1;
 }
 
 

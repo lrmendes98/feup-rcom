@@ -66,6 +66,12 @@ struct InformationFrame {
     u_int8_t bodyProtectionField;
 };
 
+/**
+ * Returns the frame index
+ * @param frame: Frame to be checked
+ * @return: Frame index, -1 if fails
+ */
+int getFrameIndex(char frame[]);
 
 /** 
  * Checks if buffer is a frame equal to targetFrame
@@ -78,12 +84,3 @@ struct InformationFrame {
 int checkIfIsFrame(char buffer[], const unsigned char* targetFrame, int verbose);
 
 int printFrame(char frame[], int frameSize);
-
-/**
- * Checks if responseBuffer has correct index
- * Sent index frame must be opposite of the index of the received response
- * @param responseBuffer: received response frame buffer
- * @param sentFrameIndex: index of the frame sent
- * @return: 1 if true, 0 if false
- */
-int checkFrameIndex(char responseBuffer[], int sentFrameIndex);

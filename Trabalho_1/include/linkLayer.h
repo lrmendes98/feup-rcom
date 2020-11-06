@@ -28,7 +28,7 @@ extern unsigned int counterTries;
  * TODO: if doesn't receive end flag, do something
  * @param fd: Port file descriptor
  * @param buffer: Buffer with the received frame
- * @return: 1 if succeeded, -1 if fails
+ * @return: Number of bytes of received frame, -1 if fails
  */
 int receiveFrame(int fd, char* buffer);
 
