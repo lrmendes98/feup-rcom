@@ -2,10 +2,10 @@
 
 int appLayerWrite(int fd)
 {
-    char *buffer = "";
-    int bufferSize = 0;
+    char packet[] = "vou apanhalos todos";
+
     // bufferSize = getFileBinary("testFiles/pinguim.gif", &buffer);
-    llwrite(fd, buffer, bufferSize);
+    llwrite(fd, packet, sizeof(packet));
     // free(buffer);
     // buffer = NULL;
 
