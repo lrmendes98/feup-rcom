@@ -210,7 +210,7 @@ int llread(int fd, char* buffer)
 {   
     int bufferSize = 20;
     char bufferAux[bufferSize];
-    int currentIndex = 1; // O recetor comeca com index 1
+    //int currentIndex = 1; // O recetor comeca com index 1
 
     // Receives Information frame
     if (receiveFrame(fd, bufferAux)) {
@@ -240,38 +240,16 @@ int llwrite(int fd, char* buffer, int length)
     while(!close) {
         // waits for answer
         if (receiveFrame(fd, responseBuffer)) {
-            printFrame(responseBuffer, FRAME_SUPERVISION_SIZE);
-            if (checkIfIsFrame(responseBuffer, FRAME_RR1, 1)) {
-                printSuccess("Received RR! \n"); 
-            }
+            
             // check received frame index. Received response must be oposite index of send frame
-            // if (sentFrameIndex == 0) {
-            //     if (checkIfIsFrame(responseBuffer, FRAME_RR1, 0)) {
-            //         printSuccess("Received RR! \n"); 
-            //     }
-            //     else if (checkIfIsFrame(responseBuffer, FRAME_REJ1, 0)) {
-            //         printError("Received REJ! \n");
-            //     }
-            //     else {
-            //         printError("Out of order! \n");
-            //         // Resend ??
-            //     }  
-            // }
-            // else if (sentFrameIndex == 1) {
-            //     if (checkIfIsFrame(responseBuffer, FRAME_RR0, 0)) {
-            //         printSuccess("Received RR! \n"); 
-            //     }
-            //     else if (checkIfIsFrame(responseBuffer, FRAME_REJ0, 0)) {
-            //         printError("Received REJ! \n");
-            //     }
-            //     else {
-            //         printError("Out of order! \n");
-            //         // Resend ??
-            //     }  
-            // }
-            // else {
-                
-            // }    
+            if (checkFrameIndex(responseBuffer, sentFrameIndex)) {
+                printSuccess("Correct index! \n");
+            }
+            else {
+                printWarning("Wrong index! \n");
+            }
+            
+               
 
             close = 1;            
         }

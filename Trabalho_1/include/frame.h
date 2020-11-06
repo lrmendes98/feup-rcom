@@ -75,6 +75,15 @@ struct InformationFrame {
  * if 0(false), no prints
  * @return: 1 if successful, 0 if not
 */
-int checkIfIsFrame(char* buffer, const unsigned char* targetFrame, int verbose);
+int checkIfIsFrame(char buffer[], const unsigned char* targetFrame, int verbose);
 
 int printFrame(char frame[], int frameSize);
+
+/**
+ * Checks if responseBuffer has correct index
+ * Sent index frame must be opposite of the index of the received response
+ * @param responseBuffer: received response frame buffer
+ * @param sentFrameIndex: index of the frame sent
+ * @return: 1 if true, 0 if false
+ */
+int checkFrameIndex(char responseBuffer[], int sentFrameIndex);
