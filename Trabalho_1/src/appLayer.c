@@ -3,7 +3,7 @@
 int appLayerWrite(int fd)
 {
     char *buffer = "";
-    long bufferSize = 0;
+    int bufferSize = 0;
     // bufferSize = getFileBinary("testFiles/pinguim.gif", &buffer);
     llwrite(fd, buffer, bufferSize);
     // free(buffer);

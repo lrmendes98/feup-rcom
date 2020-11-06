@@ -41,7 +41,7 @@ int receiveFrame(int fd, char* buffer)
             continue;
     }
 
-    printFrame(buffer, 5);
+    //printFrame(buffer, 5);
 
     // if (checkIfIsFrame(buffer, FRAME_REJ0, 0)) {
     //     printf("is the samee!\n");
@@ -208,34 +208,81 @@ int llclose(int fd)
 
 int llread(int fd, char* buffer)
 {   
-    char bufferAux[10000];
-    
-    receiveFrame(fd, bufferAux);
-    
-    // // tries to read frame
-    // while(1) {
-    //     read(fd,buffer,16);
-    //     // buffer[res]='\0';             /* set end of string, so we can printf */
-    //     // for (i = 0; i < res; i++) printf("%c", buffer[i]);
-    //     // printf("\n");
-    //     // if (buffer[0] == 'z');
-    //     //printf("buffer: %c\n", *buffer);
-    //     buffer += 16;
-    // }
+    int bufferSize = 20;
+    char bufferAux[bufferSize];
+    int currentIndex = 1; // O recetor comeca com index 1
+
+    // Receives Information frame
+    if (receiveFrame(fd, bufferAux)) {
+        printf("Received frame \n");
+
+        // Writes response RR
+        write(fd, FRAME_RR1, FRAME_SUPERVISION_SIZE);
+    }
 
     return 0;
 }
 
 int llwrite(int fd, char* buffer, int length)
 {
-    int bytesWritten = 0; 
+    char responseBuffer[FRAME_SUPERVISION_SIZE];
 
-    // build frame
+    int bytesWritten = 0; 
+    int close = 0;
+    int sentFrameIndex = 0; // O recetor comeca com index 0
+
+    // build frame, frame stuffing...
 
     //send frame
     bytesWritten = write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);
     printf("Bytes written = %d\n", bytesWritten);
-    printFrame((char*) FRAME_REJ0, FRAME_SUPERVISION_SIZE);
+
+    while(!close) {
+        // waits for answer
+        if (receiveFrame(fd, responseBuffer)) {
+            printFrame(responseBuffer, FRAME_SUPERVISION_SIZE);
+            if (checkIfIsFrame(responseBuffer, FRAME_RR1, 1)) {
+                printSuccess("Received RR! \n"); 
+            }
+            // check received frame index. Received response must be oposite index of send frame
+            // if (sentFrameIndex == 0) {
+            //     if (checkIfIsFrame(responseBuffer, FRAME_RR1, 0)) {
+            //         printSuccess("Received RR! \n"); 
+            //     }
+            //     else if (checkIfIsFrame(responseBuffer, FRAME_REJ1, 0)) {
+            //         printError("Received REJ! \n");
+            //     }
+            //     else {
+            //         printError("Out of order! \n");
+            //         // Resend ??
+            //     }  
+            // }
+            // else if (sentFrameIndex == 1) {
+            //     if (checkIfIsFrame(responseBuffer, FRAME_RR0, 0)) {
+            //         printSuccess("Received RR! \n"); 
+            //     }
+            //     else if (checkIfIsFrame(responseBuffer, FRAME_REJ0, 0)) {
+            //         printError("Received REJ! \n");
+            //     }
+            //     else {
+            //         printError("Out of order! \n");
+            //         // Resend ??
+            //     }  
+            // }
+            // else {
+                
+            // }    
+
+            close = 1;            
+        }
+        else {
+            // if receiveFrame has failed, send REJ frame
+        } 
+    }
+
+    // bytesWritten = write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);
+    // printf("Bytes written = %d\n", bytesWritten);
+    // printFrame((char*) FRAME_REJ0, FRAME_SUPERVISION_SIZE);
     
     return length;
 }
