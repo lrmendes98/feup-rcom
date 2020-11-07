@@ -3,6 +3,8 @@
 #include "linkLayer.h"
 #include "auxiliar.h"
 
+extern int packetSize;
+
 
 int appLayerWrite(int fd);
 

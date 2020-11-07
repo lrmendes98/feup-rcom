@@ -66,6 +66,20 @@ struct InformationFrame {
     u_int8_t bodyProtectionField;
 };
 
+int unBuildFrame(char* frame, int frameLength, int index, char* outputPacket);
+
+int writeFrameWithFlags(int fd, char frame[], int frameLength);
+
+/**
+ * Builds an Information Frame with received packet and
+ * returns a frame
+ * @param packet: Received packet content
+ * @param packetLength: Received packet length
+ * @param frame: Output argument that contains the complete frame
+ * @return: 1 if success, 0 if fails
+ */ 
+int buildFrame(char* packet, int packetLength, int index, char* frame);
+
 /**
  * Returns the frame index
  * @param frame: Frame to be checked

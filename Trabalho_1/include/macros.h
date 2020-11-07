@@ -9,8 +9,8 @@
 // Frame Macros
 #define FRAME_SUPERVISION_SIZE 5
 #define FRAME_FLAG 0x7E /* 01111110 */
-#define FRAME_ADDRESS_FIELD_TYPE1 0x03
-#define FRAME_ADDRESS_FIELD_TYPE2 0x01
+#define FRAME_ADDRESS_FIELD_TYPE1 0x03 /* Comandos enviados pelo Emissor e respostas enviadas pelo Receptor */
+#define FRAME_ADDRESS_FIELD_TYPE2 0x01 /* Comandos enviados pelo Receptor e respostas enviadas pelo Emissor */
 #define FRAME_CONTROL_FIELD_SET 0x03 /* 00000011 */
 #define FRAME_CONTROL_FIELD_DISC 0x0B /* 00001011 */
 #define FRAME_CONTROL_FIELD_UA 0x07 /* 00000111 */

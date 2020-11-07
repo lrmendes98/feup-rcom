@@ -13,7 +13,7 @@ int receiveFrame(int fd, char* buffer)
     
     int readSize = 0;
     int close = 0;
-    int receivedFrameSize = 0;
+    int receivedFrameSize = -1;
 
     while (!close) {
         while(readSize != 1) {
@@ -22,6 +22,7 @@ int receiveFrame(int fd, char* buffer)
 
         // check if incoming byte is frame starter flag
         if (bufferAux == FRAME_FLAG) {
+            receivedFrameSize = 1;
             while(1) {
                 receivedFrameSize++;
                 *bufferPtr = bufferAux;
@@ -213,17 +214,29 @@ int llread(int fd, char* buffer)
     int bufferSize = 1000;
     char bufferAux[bufferSize];
     //int currentIndex = 1; // O recetor comeca com index 1
-    int test = 0;
+    int test = 1;
     int close = 0;
     int receivedFrameSize = 0;
+    static int sentFrameIndex = 1; // o recetor comeca com index 1
+    int packetLength = 0;
 
     while(!close) {
 
         // Receives Information frame
         receivedFrameSize = receiveFrame(fd, bufferAux);
+        printf("Received Bytes = %i \n", receivedFrameSize);
         if (receivedFrameSize != -1) {
 
             // TODO: check if frame has correct BCC and index
+            packetLength = receivedFrameSize - 6;
+            //char outputPacket[packetLength];
+
+            printf("packetLength: %i \n", packetLength);
+
+            if (unBuildFrame(bufferAux, receivedFrameSize, sentFrameIndex, buffer) == -1) {
+                return -1;
+            }
+
             if (test) {
                 // Writes response RR
                 write(fd, FRAME_RR1, FRAME_SUPERVISION_SIZE);
@@ -236,6 +249,8 @@ int llread(int fd, char* buffer)
             }            
         }
     }
+
+    sentFrameIndex ^= 1;
 
     return receivedFrameSize;
 }
