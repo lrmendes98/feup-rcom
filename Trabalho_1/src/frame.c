@@ -99,10 +99,9 @@ int buildFrame(char* packet, int packetLength, int index, char* frame)
     return 1;
 }
 
-int unBuildFrame(char* frame, int frameLength, int index, char* outputPacket)
+int unBuildFrame(char* frame, int frameLength, int receivedIndex, char* outputPacket)
 {
-    if ((frame == NULL) || (frameLength <= 0) || (outputPacket == NULL))
-    {
+    if ((frame == NULL) || (frameLength <= 0) || (outputPacket == NULL)) {
         printError("wth are you doing men... \n");
         exit(-1);
     }
@@ -111,9 +110,9 @@ int unBuildFrame(char* frame, int frameLength, int index, char* outputPacket)
     u_int8_t controlField = frame[2]; 
 
     if (controlField == FRAME_CONTROL_FIELD_SEND0) 
-        index = 0;
+        receivedIndex = 0;
     else if (controlField == FRAME_CONTROL_FIELD_SEND1)
-        index = 1;
+        receivedIndex = 1;
     
     u_int8_t bcc1 = frame[3]; 
 
@@ -133,10 +132,11 @@ int unBuildFrame(char* frame, int frameLength, int index, char* outputPacket)
     char bcc2 = frame[frameLength - 2];
     
     if (correctBcc2 != bcc2) {
-        printError("Error in bcc2! \n");
+        printError("Incorrect bcc2! \n");
         return -1;
     }
     
 
     return 0;
 }
+

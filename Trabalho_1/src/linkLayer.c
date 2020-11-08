@@ -214,11 +214,13 @@ int llread(int fd, char* buffer)
     int bufferSize = 1000;
     char bufferAux[bufferSize];
     //int currentIndex = 1; // O recetor comeca com index 1
-    int test = 1;
+    //int test = 1;
     int close = 0;
     int receivedFrameSize = 0;
-    static int sentFrameIndex = 1; // o recetor comeca com index 1
+    static int index = 1; // o recetor comeca com index 1
+    int receivedIndex = 0;
     int packetLength = 0;
+    int error = 0;
 
     while(!close) {
 
@@ -227,30 +229,36 @@ int llread(int fd, char* buffer)
         printf("Received Bytes = %i \n", receivedFrameSize);
         if (receivedFrameSize != -1) {
 
-            // TODO: check if frame has correct BCC and index
             packetLength = receivedFrameSize - 6;
-            //char outputPacket[packetLength];
-
             printf("packetLength: %i \n", packetLength);
 
-            if (unBuildFrame(bufferAux, receivedFrameSize, sentFrameIndex, buffer) == -1) {
-                return -1;
-            }
+            // TODO: Byte unstuffing
 
-            if (test) {
-                // Writes response RR
-                write(fd, FRAME_RR1, FRAME_SUPERVISION_SIZE);
-                close = 1;
+            // Checks if frame is correct
+            if (unBuildFrame(bufferAux, receivedFrameSize, receivedIndex, buffer) == -1)
+                error = 1;
+            
+            // Check index
+            if (receivedIndex == index)
+                error = 1;
+
+            if (error) {
+                if (index == 0) 
+                    write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);
+                else
+                    write(fd, FRAME_REJ1, FRAME_SUPERVISION_SIZE);
             }
             else {
-                // Writes response REJ
-                write(fd, FRAME_REJ1, FRAME_SUPERVISION_SIZE);
-                continue;
+                if (index == 0) 
+                    write(fd, FRAME_RR0, FRAME_SUPERVISION_SIZE);
+                else
+                    write(fd, FRAME_RR1, FRAME_SUPERVISION_SIZE);
+                close = 1;
             }            
         }
     }
 
-    sentFrameIndex ^= 1;
+    index ^= 1;
 
     return receivedFrameSize;
 }
@@ -263,7 +271,7 @@ int llwrite(int fd, char* buffer, int length)
     int close = 0;
     static int sentFrameIndex = 0; // o emissor comeca com index 0
     
-    // TODO: build frame without flags
+    // build frame without flags
     int frameLength = length + 4; // address, control, BCC1 and BCC2
     char frame[frameLength]; 
     if(!buildFrame(buffer, length, sentFrameIndex, frame)) {
@@ -272,13 +280,14 @@ int llwrite(int fd, char* buffer, int length)
     }
 
     // TODO: Byte stuffing
+    
 
-    // TODO: insert flags into frame
-
+    // insert flags
     bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
 
     while(!close) {
         // waits for response
+        // TODO: With TIMEOUT
         if (receiveFrame(fd, responseBuffer) != -1) {
             
             // checks received frame index. Received response must be oposite index of send frame
