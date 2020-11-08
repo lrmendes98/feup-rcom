@@ -12,6 +12,7 @@
 #include <termios.h>
 #include "macros.h"
 #include "auxiliar.h"
+#include "stuffing.h"
 
 
 static const unsigned char FRAME_SET[] = {FRAME_FLAG,
@@ -66,7 +67,7 @@ struct InformationFrame {
     u_int8_t bodyProtectionField;
 };
 
-int unBuildFrame(char* frame, int frameLength, int index, char* outputPacket);
+char* unBuildFrame(char* frame, int* frameLength, int index);
 
 int writeFrameWithFlags(int fd, char frame[], int frameLength);
 
@@ -78,7 +79,7 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength);
  * @param frame: Output argument that contains the complete frame
  * @return: 1 if success, 0 if fails
  */ 
-int buildFrame(char* packet, int packetLength, int index, char* frame);
+char* buildFrame(char* packet, int* packetLength, int index);
 
 /**
  * Returns the frame index
@@ -98,3 +99,5 @@ int getFrameIndex(char frame[]);
 int checkIfIsFrame(char buffer[], const unsigned char* targetFrame, int verbose);
 
 int printFrame(char frame[], int frameSize);
+
+char* addFlags(char* frame, int* frame_size); 

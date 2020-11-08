@@ -19,7 +19,6 @@ int receiveFrame(int fd, char* buffer)
         while(readSize != 1) {
             readSize = read(fd, &bufferAux, 1);
         }
-
         // check if incoming byte is frame starter flag
         if (bufferAux == FRAME_FLAG) {
             receivedFrameSize = 1;
@@ -31,7 +30,6 @@ int receiveFrame(int fd, char* buffer)
                 if(bufferAux == FRAME_FLAG) {
                     *bufferPtr = bufferAux;
                     bufferPtr++;
-                    read(fd, &bufferAux, 1); 
                     break;
                 } 
 
@@ -209,7 +207,7 @@ int llclose(int fd)
     return 0;
 }
 
-int llread(int fd, char* buffer)
+char* llread(int fd)
 {   
     int bufferSize = 1000;
     char bufferAux[bufferSize];
@@ -219,23 +217,31 @@ int llread(int fd, char* buffer)
     int receivedFrameSize = 0;
     static int sentFrameIndex = 1; // o recetor comeca com index 1
     int packetLength = 0;
+    int size;
+    char* buffer;
 
     while(!close) {
 
         // Receives Information frame
         receivedFrameSize = receiveFrame(fd, bufferAux);
+
         printf("Received Bytes = %i \n", receivedFrameSize);
         if (receivedFrameSize != -1) {
-
+            if (receivedFrameSize <= 5)
+                receivedFrameSize = receiveFrame(fd, bufferAux);
             // TODO: check if frame has correct BCC and index
             packetLength = receivedFrameSize - 6;
             //char outputPacket[packetLength];
 
             printf("packetLength: %i \n", packetLength);
 
-            if (unBuildFrame(bufferAux, receivedFrameSize, sentFrameIndex, buffer) == -1) {
-                return -1;
+            size = receivedFrameSize;
+            buffer = unBuildFrame(bufferAux, &size, sentFrameIndex);
+
+            if (size == -1) {
+                return (char*)-1;
             }
+
 
             if (test) {
                 // Writes response RR
@@ -252,7 +258,7 @@ int llread(int fd, char* buffer)
 
     sentFrameIndex ^= 1;
 
-    return receivedFrameSize;
+    return buffer;
 }
 
 int llwrite(int fd, char* buffer, int length)
@@ -263,19 +269,8 @@ int llwrite(int fd, char* buffer, int length)
     int close = 0;
     static int sentFrameIndex = 0; // o emissor comeca com index 0
     
-    // TODO: build frame without flags
-    int frameLength = length + 4; // address, control, BCC1 and BCC2
-    char frame[frameLength]; 
-    if(!buildFrame(buffer, length, sentFrameIndex, frame)) {
-        printError("Failed to build frame! \n");
-        exit(-1);
-    }
-
-    // TODO: Byte stuffing
-
-    // TODO: insert flags into frame
-
-    bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
+    char* frame = buildFrame(buffer, &length, sentFrameIndex);
+    bytesWritten = writeFrameWithFlags(fd, frame, length);
 
     while(!close) {
         // waits for response
@@ -290,7 +285,7 @@ int llwrite(int fd, char* buffer, int length)
             else {
                 printWarning("Wrong index! \n");
                 // resend frame
-                bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
+                //bytesWritten = writeFrameWithFlags(fd, frame, length);
             }   
 
             // check if received response is RR or REJ    
@@ -305,7 +300,7 @@ int llwrite(int fd, char* buffer, int length)
             {
                 printError("Received REJ\n");
                 // resend frame
-                bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
+                bytesWritten = writeFrameWithFlags(fd, frame, length);
             }
             else {
                 printError("Received something other that RR or REJ! \n");

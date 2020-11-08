@@ -28,8 +28,8 @@ int main(int argc, char *argv[])
         exit(-1);
     
 
-    if (operation == TRANSMITTER)
-        appLayerWrite(fd);
+    if (operation == TRANSMITTER){
+        appLayerWrite(fd);}
     else if (operation == RECEIVER)
         appLayerRead(fd);  
 

@@ -15,6 +15,7 @@
 #include "macros.h"
 #include "auxiliar.h"
 #include "frame.h"
+#include "stuffing.h"
 
 /* Global Variables */
 extern struct termios oldtio;
@@ -86,7 +87,7 @@ int llclose(int fd);
  * @param buffer: Array of received chars
  * @return: If succeeded, returns number of received chars. If fails, returns negative
  */
-int llread(int fd, char* buffer);
+char* llread(int fd);
 
 /** 
  * Sends array buffer 
