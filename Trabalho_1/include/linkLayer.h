@@ -83,7 +83,7 @@ int llclose(int fd);
 /**
  * Reads port
  * @param fd: Port file descriptor
- * @param buffer: Array of received chars
+ * @param buffer: Array of the packet
  * @return: If succeeded, returns number of received chars. If fails, returns negative
  */
 int llread(int fd, char* buffer);

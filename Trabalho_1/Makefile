@@ -10,7 +10,7 @@ PROJ_NAME = rcom
 OBJS_DIR := obj
 SRCS_DIR := src
 INC_DIR := include
-SRCS_FILES := $(SRCS_DIR)/main.c $(SRCS_DIR)/auxiliar.c $(SRCS_DIR)/linkLayer.c $(SRCS_DIR)/appLayer.c $(SRCS_DIR)/frame.c
+SRCS_FILES := $(SRCS_DIR)/main.c $(SRCS_DIR)/auxiliar.c $(SRCS_DIR)/linkLayer.c $(SRCS_DIR)/appLayer.c $(SRCS_DIR)/frame.c $(SRCS_DIR)/stuffing.c
 
 OBJS_FILES = $(patsubst $(SRCS_DIR)/%.c,$(OBJS_DIR)/%.o, $(SRCS_FILES))
 

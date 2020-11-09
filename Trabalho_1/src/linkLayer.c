@@ -28,10 +28,17 @@ int receiveFrame(int fd, char* buffer)
                 *bufferPtr = bufferAux;
                 bufferPtr++;
                 read(fd, &bufferAux, 1); 
+                printf("%X ", (u_int8_t)bufferAux);
                 if(bufferAux == FRAME_FLAG) {
+                    if (receivedFrameSize == 2) {
+                        receivedFrameSize = 1;
+                        bufferPtr--;
+                        continue;
+                    }
+
                     *bufferPtr = bufferAux;
                     bufferPtr++;
-                    read(fd, &bufferAux, 1); 
+                    //read(fd, &bufferAux, 1); 
                     break;
                 } 
 
@@ -227,20 +234,28 @@ int llread(int fd, char* buffer)
         // Receives Information frame
         receivedFrameSize = receiveFrame(fd, bufferAux);
         printf("Received Bytes = %i \n", receivedFrameSize);
+
         if (receivedFrameSize != -1) {
 
-            packetLength = receivedFrameSize - 6;
-            printf("packetLength: %i \n", packetLength);
+            if (receivedFrameSize <= 5)
+                receivedFrameSize = receiveFrame(fd, bufferAux);
 
-            // TODO: Byte unstuffing
+            // remove flags
+            char* bufferAuxPtr;
+            bufferAuxPtr = bufferAux;
+            bufferAuxPtr++;
+            receivedFrameSize -= 2;
+            
+            // Byte unstuffing
+            bufferAuxPtr = destuffing(bufferAuxPtr, &receivedFrameSize);
 
             // Checks if frame is correct
-            if (unBuildFrame(bufferAux, receivedFrameSize, receivedIndex, buffer) == -1)
+            if (unBuildFrame(bufferAuxPtr, receivedFrameSize, receivedIndex, buffer) == -1)
                 error = 1;
             
             // Check index
-            if (receivedIndex == index)
-                error = 1;
+            // if (receivedIndex == index)
+            //     error = 1;
 
             if (error) {
                 if (index == 0) 
@@ -273,14 +288,31 @@ int llwrite(int fd, char* buffer, int length)
     
     // build frame without flags
     int frameLength = length + 4; // address, control, BCC1 and BCC2
-    char frame[frameLength]; 
+    char frame[frameLength];
+    printWarning("buffer \n \n");
+ 
+    char* ptr = frame;
+    for (int i = 0; i < frameLength; i++) {
+        u_int8_t uns = *ptr;
+        //printf("Byte %i: %X \n", i, uns);
+        printf("%X ", i, uns);
+        ptr++;
+    }
+
     if(!buildFrame(buffer, length, sentFrameIndex, frame)) {
         printError("Failed to build frame! \n");
         exit(-1);
     }
 
+    char* framePtr = frame;
+
     // TODO: Byte stuffing
+    printFrame(frame, frameLength);
+    framePtr = stuffing(frame, &frameLength);
+    printWarning("pos stuff \n \n");
+    printFrame(frame, frameLength);
     
+    //return 0;
 
     // insert flags
     bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
@@ -324,6 +356,8 @@ int llwrite(int fd, char* buffer, int length)
         else {
             // if receiveFrame has failed, send REJ frame
         } 
+
+        sleep(1);
     }
 
     // bytesWritten = write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);

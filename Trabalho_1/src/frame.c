@@ -40,7 +40,8 @@ int printFrame(char frame[], int frameSize)
     char* ptr = frame;
     for (int i = 0; i < frameSize; i++) {
         u_int8_t uns = *ptr;
-        printf("Byte %i: %X \n", i, uns);
+        //printf("Byte %i: %X \n", i, uns);
+        printf("%X ", i, uns);
         ptr++;
     }
 
@@ -83,6 +84,8 @@ int buildFrame(char* packet, int packetLength, int index, char* frame)
 
     // insert BCC1
     frame[2] = frame[0] ^ frame[1];
+    printf("bcc1: %X\n", frame[2]);
+
 
     // insert packet content and calculate BCC2, its easier when inserting :)
     char bcc2 = 0;
@@ -106,36 +109,36 @@ int unBuildFrame(char* frame, int frameLength, int receivedIndex, char* outputPa
         exit(-1);
     }
 
-    //u_int8_t addressField = frame[1];
-    u_int8_t controlField = frame[2]; 
+    //u_int8_t addressField = frame[0];
+    u_int8_t controlField = frame[1]; 
 
     if (controlField == FRAME_CONTROL_FIELD_SEND0) 
         receivedIndex = 0;
     else if (controlField == FRAME_CONTROL_FIELD_SEND1)
         receivedIndex = 1;
     
-    u_int8_t bcc1 = frame[3]; 
+    u_int8_t bcc1 = frame[2]; 
 
     // check if bcc is correct
-    char correctBcc1 = frame[1] ^ frame[2];
+    char correctBcc1 = frame[0] ^ frame[1];
+
     if (correctBcc1 != bcc1) {
         printError("Incorrect BCC1! \n");
         return -1;
     }
 
     char correctBcc2 = 0;
-    for (int i = 0; i < frameLength - 6; i++) {
-        outputPacket[i] = frame[i + 4];
+    for (int i = 0; i < frameLength - 4; i++) {
+        outputPacket[i] = frame[i + 3];
         correctBcc2 ^= outputPacket[i];
     }
     
-    char bcc2 = frame[frameLength - 2];
+    char bcc2 = frame[frameLength - 1];
     
     if (correctBcc2 != bcc2) {
         printError("Incorrect bcc2! \n");
         return -1;
-    }
-    
+    }    
 
     return 0;
 }
