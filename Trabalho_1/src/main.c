@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
     if (fd < 1) 
         exit(-1);
     
-
     if (operation == TRANSMITTER)
         appLayerWrite(fd);
     else if (operation == RECEIVER)

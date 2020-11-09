@@ -7,7 +7,7 @@ int packetSize = 256;
 
 int appLayerWrite(int fd)
 {
-    char file_name[50] = "testFiles/pinguim.gif";
+    char file_name[50] = "testFiles/meme.png";
 
     getFileInfo(file_name);
 
@@ -38,6 +38,15 @@ int appLayerWrite(int fd)
         if (packet_size == 0)
             break;
         packet_nr++;
+
+        //char * a = packet;
+        //for (int i = 0; i < packet_size; i++) {
+        //    u_int8_t uns = *a;
+        //    printf("%X ", uns);
+        //    a++;
+        //}
+        //printf("\n");
+
         llwrite(fd, packet, packet_size);
         free(packet);
     }
@@ -53,30 +62,28 @@ int appLayerWrite(int fd)
 
 int appLayerRead(int fd)
 {
-    char packet[packetSize];
-    char* packetPtr;
-    packetPtr = packet;
+    char packet[packetSize + 4];
+    //char* packetPtr;
+    //packetPtr = packet;
 
     char* file_ptr;
 
-    llread(fd, &packet);
-
     while(*packet != 3) {
         // Read bytes
-        llread(fd, &packet);
+        llread(fd, packet);
+        
 
-        /*char * a = packet;
-        for (int i = 0; i < 256; i++) {
-            printf("%X ", (u_int8_t)*a);
-            a++;
-        }
-        printf("\n");*/
+        //char * a = packet;
+        //for (int i = 0; i < 300; i++) {
+        //    printf("%X ", (u_int8_t)*a);
+        //    a++;
+        //}
+        //printf("\n");
         file_ptr = readPacket(packet, file_ptr);
 
     }
 
     //exportFile("receivedFiles/pinguim.gif", &buffer);*/
-
 
     return 0;
 }
@@ -251,8 +258,6 @@ char* readEndPacket(char* packet, char* file_ptr) {
     file  = fopen (name, "w");
     fwrite(file_ptr, sizeof(char), size, file);
     fclose(file);
-
-    free(file_ptr);
 
     return file_ptr;
 }

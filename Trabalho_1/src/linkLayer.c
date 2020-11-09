@@ -28,7 +28,7 @@ int receiveFrame(int fd, char* buffer)
                 *bufferPtr = bufferAux;
                 bufferPtr++;
                 read(fd, &bufferAux, 1); 
-                printf("%X ", (u_int8_t)bufferAux);
+                //printf("%X ", (u_int8_t)bufferAux);
                 if(bufferAux == FRAME_FLAG) {
                     if (receivedFrameSize == 2) {
                         receivedFrameSize = 1;
@@ -226,7 +226,6 @@ int llread(int fd, char* buffer)
     int receivedFrameSize = 0;
     static int index = 1; // o recetor comeca com index 1
     int receivedIndex = 0;
-    int packetLength = 0;
     int error = 0;
 
     while(!close) {
@@ -241,16 +240,20 @@ int llread(int fd, char* buffer)
                 receivedFrameSize = receiveFrame(fd, bufferAux);
 
             // remove flags
-            char* bufferAuxPtr;
-            bufferAuxPtr = bufferAux;
+            char* bufferAuxPtr = bufferAux;
             bufferAuxPtr++;
             receivedFrameSize -= 2;
-            
-            // Byte unstuffing
-            bufferAuxPtr = destuffing(bufferAuxPtr, &receivedFrameSize);
+
+            int stuffed_flags = numberStuffedFlags(bufferAuxPtr, receivedFrameSize);
+
+            char frame[receivedFrameSize - stuffed_flags];
+
+            destuffing(bufferAuxPtr, receivedFrameSize, frame);
+
+            receivedFrameSize -= stuffed_flags;
 
             // Checks if frame is correct
-            if (unBuildFrame(bufferAuxPtr, receivedFrameSize, receivedIndex, buffer) == -1)
+            if (unBuildFrame(frame, receivedFrameSize, receivedIndex, buffer) == -1)
                 error = 1;
             
             // Check index
@@ -280,6 +283,7 @@ int llread(int fd, char* buffer)
 
 int llwrite(int fd, char* buffer, int length)
 {
+
     char responseBuffer[FRAME_SUPERVISION_SIZE];
 
     int bytesWritten = 0; 
@@ -288,31 +292,20 @@ int llwrite(int fd, char* buffer, int length)
     
     // build frame without flags
     int frameLength = length + 4; // address, control, BCC1 and BCC2
-    char frame[frameLength];
-    printWarning("buffer \n \n");
- 
-    char* ptr = frame;
-    for (int i = 0; i < frameLength; i++) {
-        u_int8_t uns = *ptr;
-        //printf("Byte %i: %X \n", i, uns);
-        printf("%X ", i, uns);
-        ptr++;
-    }
+    char unstuffed_frame[frameLength];
 
-    if(!buildFrame(buffer, length, sentFrameIndex, frame)) {
+    if(!buildFrame(buffer, length, sentFrameIndex, unstuffed_frame)) {
         printError("Failed to build frame! \n");
         exit(-1);
     }
 
-    char* framePtr = frame;
+    int flags_to_stuff = numberFlagsToStuff(unstuffed_frame, frameLength);
 
-    // TODO: Byte stuffing
-    printFrame(frame, frameLength);
-    framePtr = stuffing(frame, &frameLength);
-    printWarning("pos stuff \n \n");
-    printFrame(frame, frameLength);
+    char frame[frameLength + flags_to_stuff];
     
-    //return 0;
+    stuffing(unstuffed_frame, frameLength, frame);
+
+    frameLength += flags_to_stuff;
 
     // insert flags
     bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
@@ -357,7 +350,6 @@ int llwrite(int fd, char* buffer, int length)
             // if receiveFrame has failed, send REJ frame
         } 
 
-        sleep(1);
     }
 
     // bytesWritten = write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);

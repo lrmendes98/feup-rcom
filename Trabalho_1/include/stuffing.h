@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include <stdio.h> 
 
-char* stuffing(char* packet, int* packet_size);
+int stuffing(char* packet, int packet_size, char* stuffed_bytes);
 
-char* destuffing(char* packet, int* packet_size);   
+int destuffing(char* packet, int packet_size, char* destuffed_bytes);  
+
+int numberFlagsToStuff(char* packet, int packet_size);
+
+int numberStuffedFlags(char* packet, int packet_size);
