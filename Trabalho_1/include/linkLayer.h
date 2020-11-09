@@ -33,6 +33,9 @@ extern unsigned int counterTries;
  */
 int receiveFrame(int fd, char* buffer);
 
+
+void atendeReceiveFrame();
+
 /** 
  * Answers SIGALRM interrupts, increments counterTries
  */

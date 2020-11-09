@@ -15,8 +15,11 @@ int receiveFrame(int fd, char* buffer)
     int close = 0;
     int receivedFrameSize = -1;
 
+
     while (!close) {
+        int readtries = 0;
         while(readSize != 1) {
+            readtries++;
             readSize = read(fd, &bufferAux, 1);
         }
 
@@ -69,6 +72,13 @@ void atende()
     printf("%i \n", counterTries);
 }
 
+void atendeReceiveFrame()
+{
+    printWarning("Timeout #");
+    counterTries++;
+    printf("%i \n", counterTries);
+}
+
 int setOldPortAttributes(int fd) 
 {
     if (tcsetattr(fd,TCSANOW,&oldtio) == -1) {
@@ -96,7 +106,7 @@ int portAttributesHandler(int fd)
     newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME] = 0;
-    newtio.c_cc[VMIN] = 0;
+    newtio.c_cc[VMIN] = 1;
 
     tcflush(fd, TCIOFLUSH);
 

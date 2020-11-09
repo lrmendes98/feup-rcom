@@ -7,7 +7,7 @@ int packetSize = 256;
 
 int appLayerWrite(int fd)
 {
-    char file_name[50] = "testFiles/meme.png";
+    char file_name[50] = "testFiles/pinguim.gif";
 
     getFileInfo(file_name);
 
@@ -63,10 +63,13 @@ int appLayerWrite(int fd)
 int appLayerRead(int fd)
 {
     char packet[packetSize + 4];
+    *packet = 0;
     //char* packetPtr;
     //packetPtr = packet;
 
     char* file_ptr;
+    //llread(fd, packet);
+    //return 0;
 
     while(*packet != 3) {
         // Read bytes
@@ -83,7 +86,7 @@ int appLayerRead(int fd)
 
     }
 
-    //exportFile("receivedFiles/pinguim.gif", &buffer);*/
+    //exportFile("receivedFiles/pinguim.gif", &buffer);
 
     return 0;
 }
