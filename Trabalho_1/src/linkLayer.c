@@ -14,11 +14,45 @@ int receiveFrame(int fd, char* buffer)
     int readSize = 0;
     int close = 0;
     int receivedFrameSize = -1;
+    int currentCount = 0;
 
-    while (!close) {
-        while(readSize != 1) {
+    (void) signal(SIGALRM, atendeReceiveFrame);
+
+    readSize = read(fd, &bufferAux, 1);
+
+    alarm(TIMEOUT);
+    
+    while(counterTries < MAXTRIES) {
+        if (currentCount != counterTries) {
+            currentCount = counterTries;
+            alarm(TIMEOUT);
             readSize = read(fd, &bufferAux, 1);
         }
+        
+        readSize = read(fd, &bufferAux, 1);
+        
+        if (readSize == 1) 
+            break;
+    }
+
+    if (counterTries == MAXTRIES) {
+        printError("Exceeded MAXTRIES!\n");
+        return -1;
+    }
+
+    alarm(0);
+
+
+    while (!close) {
+        // while(readSize != 1) {
+        //     readSize = read(fd, &bufferAux, 1);
+        //     if (counterTries >= 3) {
+        //         printError("timeout\n");
+        //         return -1;
+        //     }
+        // }
+
+        
 
         // check if incoming byte is frame starter flag
         if (bufferAux == FRAME_FLAG) {
@@ -63,6 +97,13 @@ int receiveFrame(int fd, char* buffer)
 }
 
 void atende()
+{
+    printWarning("Timeout #");
+    counterTries++;
+    printf("%i \n", counterTries);
+}
+
+void atendeReceiveFrame()
 {
     printWarning("Timeout #");
     counterTries++;
@@ -203,6 +244,7 @@ int llopen(char* porta, int mode)
     }
 
     alarm(0);
+    counterTries = 0;
 
     return fd;
 }
@@ -226,7 +268,7 @@ int llread(int fd, char* buffer)
     int receivedFrameSize = 0;
     static int index = 1; // o recetor comeca com index 1
     int receivedIndex = 0;
-    int packetLength = 0;
+    //int packetLength = 0;
     int error = 0;
 
     while(!close) {
@@ -282,6 +324,8 @@ int llwrite(int fd, char* buffer, int length)
 {
     char responseBuffer[FRAME_SUPERVISION_SIZE];
 
+
+
     int bytesWritten = 0; 
     int close = 0;
     static int sentFrameIndex = 0; // o emissor comeca com index 0
@@ -295,7 +339,7 @@ int llwrite(int fd, char* buffer, int length)
     for (int i = 0; i < frameLength; i++) {
         u_int8_t uns = *ptr;
         //printf("Byte %i: %X \n", i, uns);
-        printf("%X ", i, uns);
+        printf("%X ", uns);
         ptr++;
     }
 
@@ -304,22 +348,25 @@ int llwrite(int fd, char* buffer, int length)
         exit(-1);
     }
 
-    char* framePtr = frame;
+    char* framePtr;
 
     // TODO: Byte stuffing
-    printFrame(frame, frameLength);
+    //printFrame(frame, frameLength);
     framePtr = stuffing(frame, &frameLength);
-    printWarning("pos stuff \n \n");
-    printFrame(frame, frameLength);
+    //printWarning("pos stuff \n \n");
+    //printFrame(frame, frameLength);
     
     //return 0;
 
     // insert flags
     bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
 
+
+
     while(!close) {
         // waits for response
         // TODO: With TIMEOUT
+
         if (receiveFrame(fd, responseBuffer) != -1) {
             
             // checks received frame index. Received response must be oposite index of send frame
@@ -354,7 +401,8 @@ int llwrite(int fd, char* buffer, int length)
             }            
         }
         else {
-            // if receiveFrame has failed, send REJ frame
+            // if receiveFrame has failed, exit
+            return -1;
         } 
 
         sleep(1);

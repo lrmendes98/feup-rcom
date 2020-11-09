@@ -41,7 +41,7 @@ int printFrame(char frame[], int frameSize)
     for (int i = 0; i < frameSize; i++) {
         u_int8_t uns = *ptr;
         //printf("Byte %i: %X \n", i, uns);
-        printf("%X ", i, uns);
+        printf("%X ", uns);
         ptr++;
     }
 

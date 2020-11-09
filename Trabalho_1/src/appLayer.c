@@ -59,11 +59,11 @@ int appLayerRead(int fd)
 
     char* file_ptr;
 
-    llread(fd, &packet);
+    llread(fd, packetPtr);
 
     while(*packet != 3) {
         // Read bytes
-        llread(fd, &packet);
+        llread(fd, packet);
 
         /*char * a = packet;
         for (int i = 0; i < 256; i++) {
@@ -75,7 +75,7 @@ int appLayerRead(int fd)
 
     }
 
-    //exportFile("receivedFiles/pinguim.gif", &buffer);*/
+    //exportFile("receivedFiles/pinguim.gif", &buffer);
 
 
     return 0;
