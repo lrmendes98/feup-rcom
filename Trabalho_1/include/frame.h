@@ -12,7 +12,6 @@
 #include <termios.h>
 #include "macros.h"
 #include "auxiliar.h"
-#include "stuffing.h"
 
 
 static const unsigned char FRAME_SET[] = {FRAME_FLAG,

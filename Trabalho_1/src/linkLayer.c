@@ -14,45 +14,22 @@ int receiveFrame(int fd, char* buffer)
     int readSize = 0;
     int close = 0;
     int receivedFrameSize = -1;
-    int currentCount = 0;
 
-    (void) signal(SIGALRM, atendeReceiveFrame);
-
-    readSize = read(fd, &bufferAux, 1);
-
-    alarm(TIMEOUT);
-    
-    while(counterTries < MAXTRIES) {
-        if (currentCount != counterTries) {
-            currentCount = counterTries;
-            alarm(TIMEOUT);
-            readSize = read(fd, &bufferAux, 1);
-        }
-        
-        readSize = read(fd, &bufferAux, 1);
-        
-        if (readSize == 1) 
-            break;
-    }
-
-    if (counterTries == MAXTRIES) {
-        printError("Exceeded MAXTRIES!\n");
-        return -1;
-    }
-
-    alarm(0);
+    struct pollfd fds[1];
+    fds[0].fd = fd;
+    fds[0].events = 0;
+    fds[0].events |= POLLIN;
+    int retval;
 
 
     while (!close) {
-        // while(readSize != 1) {
-        //     readSize = read(fd, &bufferAux, 1);
-        //     if (counterTries >= 3) {
-        //         printError("timeout\n");
-        //         return -1;
-        //     }
-        // }
-
-        
+        int readtries = 0;
+        while(readSize != 1) {
+            readtries++;            
+            retval = poll(fds, 1, 0);
+            if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) 
+                readSize = read(fd, &bufferAux, 1);
+        }
 
         // check if incoming byte is frame starter flag
         if (bufferAux == FRAME_FLAG) {
@@ -61,8 +38,10 @@ int receiveFrame(int fd, char* buffer)
                 receivedFrameSize++;
                 *bufferPtr = bufferAux;
                 bufferPtr++;
-                read(fd, &bufferAux, 1); 
-                printf("%X ", (u_int8_t)bufferAux);
+                retval = poll(fds, 1, 0);
+                if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) 
+                    read(fd, &bufferAux, 1); 
+                //printf("%X ", (u_int8_t)bufferAux);
                 if(bufferAux == FRAME_FLAG) {
                     if (receivedFrameSize == 2) {
                         receivedFrameSize = 1;
@@ -137,7 +116,7 @@ int portAttributesHandler(int fd)
     newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME] = 0;
-    newtio.c_cc[VMIN] = 0;
+    newtio.c_cc[VMIN] = 1;
 
     tcflush(fd, TCIOFLUSH);
 
@@ -164,8 +143,31 @@ int llopenTransmitter(int fd)
             alarm(TIMEOUT);
             write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
         }
-        
-        readSize = read(fd, &buffer, FRAME_SUPERVISION_SIZE);
+
+
+        struct pollfd fds[1];
+        fds[0].fd = fd;
+        fds[0].events = 0;
+        fds[0].events |= POLLIN;
+        int retval;
+        retval = poll(fds, 1, 0);
+
+        if (fds[0].revents == POLLIN)
+        if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
+            readSize = read(fd, &buffer, FRAME_SUPERVISION_SIZE);
+            if (checkIfIsFrame(buffer, FRAME_UA, 0)) {
+                printSuccess("Received UA! \n");
+                return 1;
+            }
+            else if (checkIfIsFrame(buffer, FRAME_REJ0, 0)) {
+                printError("Received frame is REJ0! \n");
+                return -1;
+            }
+            else {
+                readSize = 0;
+                printError("Didn't recognize frame! \n");
+            }
+        }
         
         if (readSize == FRAME_SUPERVISION_SIZE) 
             break;
@@ -173,19 +175,6 @@ int llopenTransmitter(int fd)
 
     if (counterTries == MAXTRIES) {
         printError("Exceeded MAXTRIES!\n");
-        return -1;
-    }
-
-    if (checkIfIsFrame(buffer, FRAME_UA, 0)) {
-        printSuccess("Received UA! \n");
-        return 1;
-    }
-    else if (checkIfIsFrame(buffer, FRAME_REJ0, 0)) {
-        printError("Received frame is REJ0! \n");
-        return -1;
-    }
-    else {
-        printError("Didn't recognize frame! \n");
         return -1;
     }
       
@@ -200,7 +189,14 @@ int llopenReceiver(int fd)
     int readSize = 0;
 
     while(readSize != FRAME_SUPERVISION_SIZE) {
-        readSize = read(fd, &buffer, FRAME_SUPERVISION_SIZE);
+        struct pollfd fds[1];
+        fds[0].fd = fd;
+        fds[0].events = 0;
+        fds[0].events |= POLLIN;
+        int retval;
+        retval = poll(fds, 1, 0);
+        if (retval != 0 && retval != -1 && fds[0].revents == POLLIN)
+            readSize = read(fd, &buffer, FRAME_SUPERVISION_SIZE);
     }
     
     if (checkIfIsFrame(buffer, FRAME_SET, 0)) {
@@ -237,14 +233,12 @@ int llopen(char* porta, int mode)
         if (llopenReceiver(fd) == -1) 
             return -1;
     }
-        
     else if (mode == TRANSMITTER){
         if (llopenTransmitter(fd) == -1)
             return -1;
     }
 
     alarm(0);
-    counterTries = 0;
 
     return fd;
 }
@@ -268,7 +262,6 @@ int llread(int fd, char* buffer)
     int receivedFrameSize = 0;
     static int index = 1; // o recetor comeca com index 1
     int receivedIndex = 0;
-    //int packetLength = 0;
     int error = 0;
 
     while(!close) {
@@ -283,16 +276,20 @@ int llread(int fd, char* buffer)
                 receivedFrameSize = receiveFrame(fd, bufferAux);
 
             // remove flags
-            char* bufferAuxPtr;
-            bufferAuxPtr = bufferAux;
+            char* bufferAuxPtr = bufferAux;
             bufferAuxPtr++;
             receivedFrameSize -= 2;
-            
-            // Byte unstuffing
-            bufferAuxPtr = destuffing(bufferAuxPtr, &receivedFrameSize);
+
+            int stuffed_flags = numberStuffedFlags(bufferAuxPtr, receivedFrameSize);
+
+            char frame[receivedFrameSize - stuffed_flags];
+
+            destuffing(bufferAuxPtr, receivedFrameSize, frame);
+
+            receivedFrameSize -= stuffed_flags;
 
             // Checks if frame is correct
-            if (unBuildFrame(bufferAuxPtr, receivedFrameSize, receivedIndex, buffer) == -1)
+            if (unBuildFrame(frame, receivedFrameSize, receivedIndex, buffer) == -1)
                 error = 1;
             
             // Check index
@@ -322,9 +319,8 @@ int llread(int fd, char* buffer)
 
 int llwrite(int fd, char* buffer, int length)
 {
+
     char responseBuffer[FRAME_SUPERVISION_SIZE];
-
-
 
     int bytesWritten = 0; 
     int close = 0;
@@ -332,41 +328,27 @@ int llwrite(int fd, char* buffer, int length)
     
     // build frame without flags
     int frameLength = length + 4; // address, control, BCC1 and BCC2
-    char frame[frameLength];
-    printWarning("buffer \n \n");
- 
-    char* ptr = frame;
-    for (int i = 0; i < frameLength; i++) {
-        u_int8_t uns = *ptr;
-        //printf("Byte %i: %X \n", i, uns);
-        printf("%X ", uns);
-        ptr++;
-    }
+    char unstuffed_frame[frameLength];
 
-    if(!buildFrame(buffer, length, sentFrameIndex, frame)) {
+    if(!buildFrame(buffer, length, sentFrameIndex, unstuffed_frame)) {
         printError("Failed to build frame! \n");
         exit(-1);
     }
 
-    char* framePtr;
+    int flags_to_stuff = numberFlagsToStuff(unstuffed_frame, frameLength);
 
-    // TODO: Byte stuffing
-    //printFrame(frame, frameLength);
-    framePtr = stuffing(frame, &frameLength);
-    //printWarning("pos stuff \n \n");
-    //printFrame(frame, frameLength);
+    char frame[frameLength + flags_to_stuff];
     
-    //return 0;
+    stuffing(unstuffed_frame, frameLength, frame);
+
+    frameLength += flags_to_stuff;
 
     // insert flags
     bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
 
-
-
     while(!close) {
         // waits for response
         // TODO: With TIMEOUT
-
         if (receiveFrame(fd, responseBuffer) != -1) {
             
             // checks received frame index. Received response must be oposite index of send frame
@@ -401,11 +383,9 @@ int llwrite(int fd, char* buffer, int length)
             }            
         }
         else {
-            // if receiveFrame has failed, exit
-            return -1;
+            // if receiveFrame has failed, send REJ frame
         } 
 
-        sleep(1);
     }
 
     // bytesWritten = write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);

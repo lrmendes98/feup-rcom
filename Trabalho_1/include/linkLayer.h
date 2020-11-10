@@ -15,6 +15,8 @@
 #include "macros.h"
 #include "auxiliar.h"
 #include "frame.h"
+#include "stuffing.h"
+#include <sys/poll.h>
 
 /* Global Variables */
 extern struct termios oldtio;
