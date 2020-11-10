@@ -258,7 +258,7 @@ int llclose(int fd)
 
 int llread(int fd, char* buffer)
 {   
-    int bufferSize = 1000;
+    int bufferSize = (PACKET_SIZE * 2) + 1;
     char bufferAux[bufferSize];
     //int currentIndex = 1; // O recetor comeca com index 1
     //int test = 1;

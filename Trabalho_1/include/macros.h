@@ -5,6 +5,7 @@
 #define BAUDRATE B38400
 #define MAXTRIES 3 + 1
 #define TIMEOUT 3
+#define PACKET_SIZE 2000 
 
 // Frame Macros
 #define FRAME_SUPERVISION_SIZE 5

@@ -10,8 +10,6 @@ struct FileInfo {
 };
 
 extern struct FileInfo file_info;
-extern int packetSize;
-
 
 int appLayerWrite(int fd);
 
