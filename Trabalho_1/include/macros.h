@@ -1,11 +1,10 @@
 #pragma once
 
+#include "variables.h"
+
 #define RECEIVER 0
 #define TRANSMITTER 1
-#define BAUDRATE B38400
-#define MAXTRIES 3 + 1
-#define TIMEOUT 3
-#define PACKET_SIZE 2000 
+
 
 // Frame Macros
 #define FRAME_SUPERVISION_SIZE 5
@@ -15,6 +14,7 @@
 #define FRAME_CONTROL_FIELD_SET 0x03 /* 00000011 */
 #define FRAME_CONTROL_FIELD_DISC 0x0B /* 00001011 */
 #define FRAME_CONTROL_FIELD_UA 0x07 /* 00000111 */
+#define MAXTRIES MAXIMUM_TRIES + 1
 #define FRAME_CONTROL_FIELD_RR0  ((unsigned char) (0x05 | 0x00)) /* R0000101 */
 #define FRAME_CONTROL_FIELD_RR1  ((unsigned char) (0x05 | 0x80)) /* R = 1 */
 #define FRAME_CONTROL_FIELD_REJ0 ((unsigned char) (0x01 | 0x00)) /* R0000001 */

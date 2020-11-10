@@ -26,6 +26,8 @@ int main(int argc, char *argv[])
     
     if (fd < 1) 
         exit(-1);
+
+    srand(time(NULL));
     
     if (operation == TRANSMITTER)
         appLayerWrite(fd);

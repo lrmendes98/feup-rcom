@@ -5,7 +5,7 @@ struct FileInfo file_info;
 
 int appLayerWrite(int fd)
 {
-    char file_name[50] = "testFiles/meme.png";
+    char file_name[50] = FILE_NAME;
 
     getFileInfo(file_name);
 
@@ -57,6 +57,8 @@ int appLayerWrite(int fd)
     free(final_packet);
 
     fclose(filePtr);
+
+    printSuccess("All frames sent!\n");
     
     return 0;
 }
@@ -87,6 +89,9 @@ int appLayerRead(int fd)
         file_ptr = readPacket(packet, file_ptr);
 
     }
+
+    printSuccess("All frames received!\n");
+    printSuccess("File created!\n");
 
     //exportFile("receivedFiles/pinguim.gif", &buffer);
 

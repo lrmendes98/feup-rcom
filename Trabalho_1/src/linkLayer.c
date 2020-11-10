@@ -304,6 +304,7 @@ int llread(int fd, char* buffer)
             //sleep(6);
 
             if (error) {
+                error = 0;
                 if (index == 0) 
                     write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);
                 else
@@ -355,7 +356,7 @@ int llwrite(int fd, char* buffer, int length)
     //TEST
     //sleep(1);
 
-    int currentCount, readSize = 0;
+    int currentCount;
     counterTries = 0;
 
     alarm(TIMEOUT); 
@@ -376,7 +377,7 @@ int llwrite(int fd, char* buffer, int length)
         retval = poll(fds, 1, 0);
 
         if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
-            readSize = read(fd, &responseBuffer, FRAME_SUPERVISION_SIZE);
+            read(fd, &responseBuffer, FRAME_SUPERVISION_SIZE);
             // checks received frame index. Received response must be oposite index of send frame
             int receivedIndex = getFrameIndex(responseBuffer);
             if (receivedIndex != sentFrameIndex) {
@@ -406,13 +407,8 @@ int llwrite(int fd, char* buffer, int length)
                 counterTries = 0;
                 continue;
             }
-            else {
-                readSize = 0;
-            }
+            else {}
         }
-        
-        if (readSize == FRAME_SUPERVISION_SIZE) 
-            break;
     }
 
     if (counterTries == MAXTRIES) {
