@@ -77,16 +77,20 @@ int receiveFrame(int fd, char* buffer)
 
 void atende()
 {
-    printWarning("Timeout #");
     counterTries++;
-    printf("%i \n", counterTries);
+    if (counterTries < MAXTRIES) {
+        printWarning("Timeout #");
+        printf("%i \n", counterTries);
+    }  
 }
 
 void atendeReceiveFrame()
 {
-    printWarning("Timeout #");
     counterTries++;
-    printf("%i \n", counterTries);
+    if (counterTries < MAXTRIES) {
+        printWarning("Timeout #");
+        printf("%i \n", counterTries);
+    }
 }
 
 int setOldPortAttributes(int fd) 
@@ -152,7 +156,6 @@ int llopenTransmitter(int fd)
         int retval;
         retval = poll(fds, 1, 0);
 
-        if (fds[0].revents == POLLIN)
         if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
             readSize = read(fd, &buffer, FRAME_SUPERVISION_SIZE);
             if (checkIfIsFrame(buffer, FRAME_UA, 0)) {
@@ -296,6 +299,9 @@ int llread(int fd, char* buffer)
             // Check index
             // if (receivedIndex == index)
             //     error = 1;
+            
+            //TEST
+            //sleep(6);
 
             if (error) {
                 if (index == 0) 
@@ -324,7 +330,6 @@ int llwrite(int fd, char* buffer, int length)
     char responseBuffer[FRAME_SUPERVISION_SIZE];
 
     int bytesWritten = 0; 
-    int close = 0;
     static int sentFrameIndex = 0; // o emissor comeca com index 0
     
     // build frame without flags
@@ -347,11 +352,31 @@ int llwrite(int fd, char* buffer, int length)
     // insert flags
     bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
 
-    while(!close) {
-        // waits for response
-        // TODO: With TIMEOUT
-        if (receiveFrame(fd, responseBuffer) != -1) {
-            
+    //TEST
+    //sleep(1);
+
+    int currentCount, readSize = 0;
+    counterTries = 0;
+
+    alarm(TIMEOUT); 
+
+    while(counterTries < MAXTRIES) {
+        if (currentCount != counterTries) {
+            currentCount = counterTries;
+            alarm(TIMEOUT);
+            write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
+        }
+
+
+        struct pollfd fds[1];
+        fds[0].fd = fd;
+        fds[0].events = 0;
+        fds[0].events |= POLLIN;
+        int retval;
+        retval = poll(fds, 1, 0);
+
+        if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
+            readSize = read(fd, &responseBuffer, FRAME_SUPERVISION_SIZE);
             // checks received frame index. Received response must be oposite index of send frame
             int receivedIndex = getFrameIndex(responseBuffer);
             if (receivedIndex != sentFrameIndex) {
@@ -361,14 +386,16 @@ int llwrite(int fd, char* buffer, int length)
                 printWarning("Wrong index! \n");
                 // resend frame
                 bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
-            }   
+                counterTries = 0;
+                continue;
+            }
 
             // check if received response is RR or REJ    
             if (checkIfIsFrame(responseBuffer, FRAME_RR0, 0) ||
                 checkIfIsFrame(responseBuffer, FRAME_RR1, 0)) 
             {
                 //printSuccess("Received RR\n");
-                close = 1;
+                break;
             }
             else if (checkIfIsFrame(responseBuffer, FRAME_REJ0, 0) ||
                 checkIfIsFrame(responseBuffer, FRAME_REJ1, 0)) 
@@ -376,16 +403,21 @@ int llwrite(int fd, char* buffer, int length)
                 printError("Received REJ\n");
                 // resend frame
                 bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
+                counterTries = 0;
+                continue;
             }
             else {
-                printError("Received something other that RR or REJ! \n");
-                return -1;
-            }            
+                readSize = 0;
+            }
         }
-        else {
-            // if receiveFrame has failed, send REJ frame
-        } 
+        
+        if (readSize == FRAME_SUPERVISION_SIZE) 
+            break;
+    }
 
+    if (counterTries == MAXTRIES) {
+        printError("Exceeded MAXTRIES!\n");
+        return -1;
     }
 
     // bytesWritten = write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);

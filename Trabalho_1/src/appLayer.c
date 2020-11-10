@@ -7,13 +7,14 @@ int packetSize = 256;
 
 int appLayerWrite(int fd)
 {
-    char file_name[50] = "testFiles/pinguim.gif";
+    char file_name[50] = "testFiles/meme.png";
 
     getFileInfo(file_name);
 
     int packet_size;
     char * initial_packet = buildControlPacket(2, &packet_size);
-    llwrite(fd, initial_packet, packet_size);
+    if (llwrite(fd, initial_packet, packet_size) == -1)
+        return -1;
     free(initial_packet);
 
     // char * a = initial_packet;
@@ -47,12 +48,14 @@ int appLayerWrite(int fd)
         //}
         //printf("\n");
 
-        llwrite(fd, packet, packet_size);
+        if (llwrite(fd, packet, packet_size) == -1)
+            return -1;
         free(packet);
     }
 
     char * final_packet = buildControlPacket(3, &packet_size);
-    llwrite(fd, final_packet, packet_size);
+    if (llwrite(fd, final_packet, packet_size) == -1)
+        return -1;
     free(final_packet);
 
     fclose(filePtr);
@@ -73,7 +76,8 @@ int appLayerRead(int fd)
 
     while(*packet != 3) {
         // Read bytes
-        llread(fd, packet);
+        if (llread(fd, packet) == -1)
+            return -1;
         
 
         //char * a = packet;
@@ -257,7 +261,6 @@ char* readEndPacket(char* packet, char* file_ptr) {
     file_ptr -= size;
 
     FILE *file;
-    printf("%s\n", name);
     file  = fopen (name, "w");
     fwrite(file_ptr, sizeof(char), size, file);
     fclose(file);

@@ -3,7 +3,7 @@
 #define RECEIVER 0
 #define TRANSMITTER 1
 #define BAUDRATE B38400
-#define MAXTRIES 3
+#define MAXTRIES 3 + 1
 #define TIMEOUT 3
 
 // Frame Macros
