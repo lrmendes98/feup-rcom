@@ -9,7 +9,7 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength)
     writtenSize += write(fd, frame, frameLength);
     writtenSize += write(fd, &flag, 1);
     
-    printf("Bytes written = %d\n", writtenSize);
+    //printf("Bytes written = %d\n", writtenSize);
     
     return writtenSize;
 }

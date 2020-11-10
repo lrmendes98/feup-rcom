@@ -156,7 +156,7 @@ int llopenTransmitter(int fd)
         if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
             readSize = read(fd, &buffer, FRAME_SUPERVISION_SIZE);
             if (checkIfIsFrame(buffer, FRAME_UA, 0)) {
-                printSuccess("Received UA! \n");
+                //printSuccess("Received UA! \n");
                 return 1;
             }
             else if (checkIfIsFrame(buffer, FRAME_REJ0, 0)) {
@@ -164,8 +164,9 @@ int llopenTransmitter(int fd)
                 return -1;
             }
             else {
+                // printFrame(buffer, FRAME_SUPERVISION_SIZE);
                 readSize = 0;
-                printError("Didn't recognize frame! \n");
+                // printError("Didn't recognize frame! \n");
             }
         }
         
@@ -268,7 +269,7 @@ int llread(int fd, char* buffer)
 
         // Receives Information frame
         receivedFrameSize = receiveFrame(fd, bufferAux);
-        printf("Received Bytes = %i \n", receivedFrameSize);
+        //printf("Received Bytes = %i \n", receivedFrameSize);
 
         if (receivedFrameSize != -1) {
 
@@ -354,8 +355,7 @@ int llwrite(int fd, char* buffer, int length)
             // checks received frame index. Received response must be oposite index of send frame
             int receivedIndex = getFrameIndex(responseBuffer);
             if (receivedIndex != sentFrameIndex) {
-                printSuccess("Correct index! \n");
-                // send ACK
+                //printSuccess("Correct index! \n");
             }
             else {
                 printWarning("Wrong index! \n");
@@ -367,7 +367,7 @@ int llwrite(int fd, char* buffer, int length)
             if (checkIfIsFrame(responseBuffer, FRAME_RR0, 0) ||
                 checkIfIsFrame(responseBuffer, FRAME_RR1, 0)) 
             {
-                printSuccess("Received RR\n");
+                //printSuccess("Received RR\n");
                 close = 1;
             }
             else if (checkIfIsFrame(responseBuffer, FRAME_REJ0, 0) ||
