@@ -65,6 +65,7 @@ int appLayerWrite(int fd)
 
 int appLayerRead(int fd)
 {
+    
     char packet[PACKET_SIZE + 4];
     *packet = 0;
     //char* packetPtr;

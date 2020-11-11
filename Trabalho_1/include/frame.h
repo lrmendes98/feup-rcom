@@ -58,16 +58,7 @@ static const unsigned char FRAME_DISC[] = {FRAME_FLAG,
                                         FRAME_FLAG};
 
 
-struct InformationFrame {
-    u_int8_t flag;
-    u_int8_t addressField;
-    u_int8_t controlField;
-    u_int8_t headerProtectionField;
-    char* informationField;  
-    u_int8_t bodyProtectionField;
-};
-
-int unBuildFrame(char* frame, int frameLength, int index, char* outputPacket);
+int unBuildFrame(char* frame, int frameLength, char* outputPacket);
 
 int writeFrameWithFlags(int fd, char frame[], int frameLength);
 

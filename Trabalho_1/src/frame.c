@@ -4,15 +4,25 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength)
 {
     char currentBcc1;
     char currentBcc2;
+    char currentIndex;
     if (ENABLE_CURRUPT_FRAME_TESTS) {
         currentBcc1 = frame[2];
         currentBcc2 = frame[frameLength - 2];
+        currentIndex = frame[1];
         int res = rand() % 20;
         if (res == 0) {
             frame[2] = 0;
         }
         if (res == 1) {
             frame[frameLength - 2] = 0;
+        }
+        if (res == 2) {
+            if (frame[1] == FRAME_CONTROL_FIELD_SEND0) {
+                frame[1] = FRAME_CONTROL_FIELD_SEND1;
+            }
+            else {
+                frame[1] = FRAME_CONTROL_FIELD_SEND0;
+            }
         }
     }
 
@@ -28,6 +38,7 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength)
     if (ENABLE_CURRUPT_FRAME_TESTS) {
         frame[frameLength - 2] = currentBcc2;
         frame[2] = currentBcc1;
+        frame[1] = currentIndex;
     }
     
     return writtenSize;
@@ -122,7 +133,7 @@ int buildFrame(char* packet, int packetLength, int index, char* frame)
     return 1;
 }
 
-int unBuildFrame(char* frame, int frameLength, int receivedIndex, char* outputPacket)
+int unBuildFrame(char* frame, int frameLength, char* outputPacket)
 {
     if ((frame == NULL) || (frameLength <= 0) || (outputPacket == NULL)) {
         printError("wth are you doing men... \n");
@@ -130,12 +141,6 @@ int unBuildFrame(char* frame, int frameLength, int receivedIndex, char* outputPa
     }
 
     //u_int8_t addressField = frame[0];
-    u_int8_t controlField = frame[1]; 
-
-    if (controlField == FRAME_CONTROL_FIELD_SEND0) 
-        receivedIndex = 0;
-    else if (controlField == FRAME_CONTROL_FIELD_SEND1)
-        receivedIndex = 1;
     
     u_int8_t bcc1 = frame[2]; 
 

@@ -277,7 +277,7 @@ int llread(int fd, char* buffer)
         if (receivedFrameSize != -1) {
 
             if (receivedFrameSize <= 5)
-                receivedFrameSize = receiveFrame(fd, bufferAux);
+                continue;
 
             // remove flags
             char* bufferAuxPtr = bufferAux;
@@ -292,16 +292,36 @@ int llread(int fd, char* buffer)
 
             receivedFrameSize -= stuffed_flags;
 
+            //printFrame(frame, receivedFrameSize);
+            //printf("%i\n", index);
+
+            //TEST
+            //sleep(3);
+
+            //check index
+            u_int8_t controlField = frame[1]; 
+
+            if (controlField == FRAME_CONTROL_FIELD_SEND0) 
+                receivedIndex = 0;
+            else if (controlField == FRAME_CONTROL_FIELD_SEND1)
+                receivedIndex = 1;
+
+            if (receivedIndex == index) {
+                printWarning("Wrong index!\n");
+                if (receivedIndex == 0) 
+                    write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);
+                else
+                    write(fd, FRAME_REJ1, FRAME_SUPERVISION_SIZE);
+                continue;
+            }
+
             // Checks if frame is correct
-            if (unBuildFrame(frame, receivedFrameSize, receivedIndex, buffer) == -1)
+            if (unBuildFrame(frame, receivedFrameSize, buffer) == -1)
                 error = 1;
             
             // Check index
             // if (receivedIndex == index)
             //     error = 1;
-            
-            //TEST
-            //sleep(6);
 
             if (error) {
                 error = 0;
@@ -341,6 +361,7 @@ int llwrite(int fd, char* buffer, int length)
         printError("Failed to build frame! \n");
         exit(-1);
     }
+    
 
     int flags_to_stuff = numberFlagsToStuff(unstuffed_frame, frameLength);
 
@@ -356,7 +377,7 @@ int llwrite(int fd, char* buffer, int length)
     //TEST
     //sleep(1);
 
-    int currentCount;
+    int currentCount = 0;
     counterTries = 0;
 
     alarm(TIMEOUT); 
@@ -365,7 +386,7 @@ int llwrite(int fd, char* buffer, int length)
         if (currentCount != counterTries) {
             currentCount = counterTries;
             alarm(TIMEOUT);
-            write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
+            bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
         }
 
 
