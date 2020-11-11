@@ -249,8 +249,6 @@ int llopen(char* porta, int mode)
 
 int llclose(int fd)
 {
-    //TODO: Send close frame
-
     setOldPortAttributes(fd); 
 
     return 0;
@@ -260,8 +258,6 @@ int llread(int fd, char* buffer)
 {   
     int bufferSize = (PACKET_SIZE * 2) + 1;
     char bufferAux[bufferSize];
-    //int currentIndex = 1; // O recetor comeca com index 1
-    //int test = 1;
     int close = 0;
     int receivedFrameSize = 0;
     static int index = 1; // o recetor comeca com index 1
@@ -272,7 +268,6 @@ int llread(int fd, char* buffer)
 
         // Receives Information frame
         receivedFrameSize = receiveFrame(fd, bufferAux);
-        //printf("Received Bytes = %i \n", receivedFrameSize);
 
         if (receivedFrameSize != -1) {
 
@@ -292,15 +287,11 @@ int llread(int fd, char* buffer)
 
             receivedFrameSize -= stuffed_flags;
 
-            //printFrame(frame, receivedFrameSize);
-            //printf("%i\n", index);
-
             //TEST
             //sleep(3);
 
             //check index
             u_int8_t controlField = frame[1]; 
-
             if (controlField == FRAME_CONTROL_FIELD_SEND0) 
                 receivedIndex = 0;
             else if (controlField == FRAME_CONTROL_FIELD_SEND1)
@@ -318,11 +309,7 @@ int llread(int fd, char* buffer)
             // Checks if frame is correct
             if (unBuildFrame(frame, receivedFrameSize, buffer) == -1)
                 error = 1;
-            
-            // Check index
-            // if (receivedIndex == index)
-            //     error = 1;
-
+           
             if (error) {
                 error = 0;
                 if (index == 0) 
@@ -336,7 +323,7 @@ int llread(int fd, char* buffer)
                 else
                     write(fd, FRAME_RR1, FRAME_SUPERVISION_SIZE);
                 close = 1;
-            }            
+            }   
         }
     }
 
@@ -347,7 +334,6 @@ int llread(int fd, char* buffer)
 
 int llwrite(int fd, char* buffer, int length)
 {
-
     char responseBuffer[FRAME_SUPERVISION_SIZE];
 
     int bytesWritten = 0; 
@@ -360,8 +346,7 @@ int llwrite(int fd, char* buffer, int length)
     if(!buildFrame(buffer, length, sentFrameIndex, unstuffed_frame)) {
         printError("Failed to build frame! \n");
         exit(-1);
-    }
-    
+    }    
 
     int flags_to_stuff = numberFlagsToStuff(unstuffed_frame, frameLength);
 
@@ -388,7 +373,6 @@ int llwrite(int fd, char* buffer, int length)
             alarm(TIMEOUT);
             bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
         }
-
 
         struct pollfd fds[1];
         fds[0].fd = fd;
@@ -436,10 +420,6 @@ int llwrite(int fd, char* buffer, int length)
         printError("Exceeded MAXTRIES!\n");
         return -1;
     }
-
-    // bytesWritten = write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);
-    // printf("Bytes written = %d\n", bytesWritten);
-    // printFrame((char*) FRAME_REJ0, FRAME_SUPERVISION_SIZE);
 
     sentFrameIndex ^= 1;
     

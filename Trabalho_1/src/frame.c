@@ -5,6 +5,7 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength)
     char currentBcc1;
     char currentBcc2;
     char currentIndex;
+
     if (ENABLE_CURRUPT_FRAME_TESTS) {
         currentBcc1 = frame[2];
         currentBcc2 = frame[frameLength - 2];
@@ -70,7 +71,6 @@ int printFrame(char frame[], int frameSize)
     char* ptr = frame;
     for (int i = 0; i < frameSize; i++) {
         u_int8_t uns = *ptr;
-        //printf("Byte %i: %X \n", i, uns);
         printf("%X ", uns);
         ptr++;
     }
@@ -90,10 +90,6 @@ int getFrameIndex(char frame[])
             checkIfIsFrame(frame, FRAME_REJ1, 0)) {
         return 1;
     }
-
-    // TODO: if is information frame...
-
-
 
     return -1;
 }
@@ -159,9 +155,6 @@ int unBuildFrame(char* frame, int frameLength, char* outputPacket)
     }
     
     char bcc2 = frame[frameLength - 1];
-
-    //printf("bcc2: %X\n", bcc2);
-    //printf("correct bcc2: %X\n", correctBcc2);
     
     if (correctBcc2 != bcc2) {
         printError("Incorrect bcc2! \n");
@@ -170,4 +163,3 @@ int unBuildFrame(char* frame, int frameLength, char* outputPacket)
 
     return 0;
 }
-

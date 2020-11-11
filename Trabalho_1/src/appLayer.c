@@ -15,14 +15,6 @@ int appLayerWrite(int fd)
         return -1;
     free(initial_packet);
 
-    // char * a = initial_packet;
-    // for (int i = 0; i < packet_size; i++) {
-    //     uint8_t uns = *a;
-    //     printf("%X ", uns);
-    //     a++;
-    // }
-    // printf("\n");
-
     FILE *filePtr;
     filePtr = fopen(file_name,"rb");
     FILE *filePtr_copy = filePtr;
@@ -37,14 +29,6 @@ int appLayerWrite(int fd)
         if (packet_size == 0)
             break;
         packet_nr++;
-
-        //char * a = packet;
-        //for (int i = 0; i < packet_size; i++) {
-        //    u_int8_t uns = *a;
-        //    printf("%X ", uns);
-        //    a++;
-        //}
-        //printf("\n");
 
         if (llwrite(fd, packet, packet_size) == -1)
             return -1;
@@ -68,33 +52,18 @@ int appLayerRead(int fd)
     
     char packet[PACKET_SIZE + 4];
     *packet = 0;
-    //char* packetPtr;
-    //packetPtr = packet;
-
     char* file_ptr;
-    //llread(fd, packet);
-    //return 0;
-
+    
     while(*packet != 3) {
         // Read bytes
         if (llread(fd, packet) == -1)
             return -1;
         
-
-        //char * a = packet;
-        //for (int i = 0; i < 300; i++) {
-        //    printf("%X ", (u_int8_t)*a);
-        //    a++;
-        //}
-        //printf("\n");
         file_ptr = readPacket(packet, file_ptr);
-
     }
 
     printSuccess("All frames received!\n");
     printSuccess("File created!\n");
-
-    //exportFile("receivedFiles/pinguim.gif", &buffer);
 
     return 0;
 }
@@ -213,7 +182,6 @@ char* buildDataPacket(FILE* filePtr, char* filename, int packet_nr,  int * packe
 }
 
 char* readPacket(char* packet, char* file_ptr) {
-
     u_int8_t packet_type = *packet;
     if(packet_type == 0x01) {
         file_ptr = readDataPacket(packet, file_ptr);
@@ -247,7 +215,6 @@ char* readDataPacket(char* packet, char* file_ptr) {
 }
 
 char* readEndPacket(char* packet, char* file_ptr) {
-
     int size = getFileSize(packet + 3);
     packet += 8;
     int name_size = (u_int8_t)*packet;
