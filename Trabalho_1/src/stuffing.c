@@ -60,6 +60,7 @@ int numberFlagsToStuff(char* packet, int packet_size) {
 
 int numberStuffedFlags(char* packet, int packet_size){
     char* packet_iterator = packet;
+
     int new_bytes = 0;
     for (int i = 0; i < packet_size; i++) {
         if ((u_int8_t)*packet_iterator == 0x7d) {

@@ -5,4 +5,4 @@
 #define TIMEOUT 3
 #define PACKET_SIZE 2000 
 #define ENABLE_CURRUPT_FRAME_TESTS 0
-#define FILE_NAME "testFiles/meme.png"
+#define FILE_NAME "testFiles/pinguim.gif"

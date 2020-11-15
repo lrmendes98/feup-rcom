@@ -15,6 +15,7 @@ int appLayerWrite(int fd)
         return -1;
     free(initial_packet);
 
+
     FILE *filePtr;
     filePtr = fopen(file_name,"rb");
     FILE *filePtr_copy = filePtr;

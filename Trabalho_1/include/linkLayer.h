@@ -21,6 +21,7 @@
 /* Global Variables */
 extern struct termios oldtio;
 extern unsigned int counterTries;
+extern int frameTimout;
 
 /**
  * Receives a frame
@@ -41,6 +42,8 @@ void atendeReceiveFrame();
  * Answers SIGALRM interrupts, increments counterTries
  */
 void atende();
+
+void atendeReceiveNotFrame();
 
 /**
  * Sets old port attributes
