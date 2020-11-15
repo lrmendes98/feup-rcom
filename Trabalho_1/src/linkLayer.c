@@ -4,6 +4,7 @@
 /* Global Variables */
 struct termios oldtio;
 unsigned int counterTries = 0;
+int frameTimout = 0;
 
 
 int receiveFrame(int fd, char* buffer)
@@ -21,26 +22,39 @@ int receiveFrame(int fd, char* buffer)
     fds[0].events |= POLLIN;
     int retval;
 
-
     while (!close) {
+		if (frameTimout){
+			frameTimout = 0;
+			return 0;
+		}
         int readtries = 0;
         while(readSize != 1) {
+			if (frameTimout){
+				frameTimout = 0;
+				return 0;
+			}
             readtries++;            
             retval = poll(fds, 1, 0);
-            if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) 
+            if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
                 readSize = read(fd, &bufferAux, 1);
+            }
         }
 
         // check if incoming byte is frame starter flag
         if (bufferAux == FRAME_FLAG) {
             receivedFrameSize = 1;
             while(1) {
-                receivedFrameSize++;
-                *bufferPtr = bufferAux;
-                bufferPtr++;
+				if (frameTimout){
+					frameTimout = 0;
+					return 0;
+				}
                 retval = poll(fds, 1, 0);
-                if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) 
+                if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
                     read(fd, &bufferAux, 1); 
+                    receivedFrameSize++;
+                    bufferPtr++;
+                    *bufferPtr = bufferAux;
+                }
                 //printf("%X ", (u_int8_t)bufferAux);
                 if(bufferAux == FRAME_FLAG) {
                     if (receivedFrameSize == 2) {
@@ -82,6 +96,12 @@ void atende()
         printWarning("Timeout #");
         printf("%i \n", counterTries);
     }  
+}
+
+void atendeReceiveNotFrame()
+{
+    printWarning("Read Timeout\n");
+    frameTimout = 1;
 }
 
 void atendeReceiveFrame()
@@ -263,13 +283,23 @@ int llread(int fd, char* buffer)
     static int index = 1; // o recetor comeca com index 1
     int receivedIndex = 0;
     int error = 0;
+    
+    (void) signal(SIGALRM, atendeReceiveNotFrame);
 
     while(!close) {
 
         // Receives Information frame
+        int readTimeout = 2;
+        if (TIMEOUT >= 4)
+			readTimeout = TIMEOUT - 2;
+        alarm(readTimeout);
         receivedFrameSize = receiveFrame(fd, bufferAux);
+        alarm(0);
 
         if (receivedFrameSize != -1) {
+			if (receivedFrameSize == 0) {
+				continue;
+			}
 
             if (receivedFrameSize <= 5)
                 continue;
@@ -287,9 +317,6 @@ int llread(int fd, char* buffer)
 
             receivedFrameSize -= stuffed_flags;
 
-            //TEST
-            //sleep(3);
-
             //check index
             u_int8_t controlField = frame[1]; 
             if (controlField == FRAME_CONTROL_FIELD_SEND0) 
@@ -300,12 +327,12 @@ int llread(int fd, char* buffer)
             if (receivedIndex == index) {
                 printWarning("Wrong index!\n");
                 if (receivedIndex == 0) 
-                    write(fd, FRAME_REJ0, FRAME_SUPERVISION_SIZE);
+                    write(fd, FRAME_RR1, FRAME_SUPERVISION_SIZE);
                 else
-                    write(fd, FRAME_REJ1, FRAME_SUPERVISION_SIZE);
+                    write(fd, FRAME_RR0, FRAME_SUPERVISION_SIZE);
                 continue;
             }
-
+            
             // Checks if frame is correct
             if (unBuildFrame(frame, receivedFrameSize, buffer) == -1)
                 error = 1;
@@ -318,6 +345,8 @@ int llread(int fd, char* buffer)
                     write(fd, FRAME_REJ1, FRAME_SUPERVISION_SIZE);
             }
             else {
+				//TEST
+            	//sleep(3);
                 if (index == 0) 
                     write(fd, FRAME_RR0, FRAME_SUPERVISION_SIZE);
                 else
@@ -390,9 +419,6 @@ int llwrite(int fd, char* buffer, int length)
             }
             else {
                 printWarning("Wrong index! \n");
-                // resend frame
-                bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
-                counterTries = 0;
                 continue;
             }
 
