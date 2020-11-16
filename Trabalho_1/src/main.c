@@ -3,7 +3,9 @@
 #include "appLayer.h"
 
 /* Global variables */
-char* fileName;
+extern char* fileName;
+extern int packetSize;
+extern int timeoutSeconds;
 
 int main(int argc, char *argv[])
 {
@@ -11,21 +13,23 @@ int main(int argc, char *argv[])
 
     // Handle program arguments
     if (strcmp("./read", argv[0]) == 0) {
-        if (argc != 2) {
-            printf("Usage: ./read <port>\n");
+        if (argc != 3) {
+            printf("Usage: ./read <port> <packetSize>\n");
             exit(-1);
         }
         else {
+            packetSize = atoi(argv[2]);
             operation = RECEIVER;
         }
     }
     if (strcmp("./write", argv[0]) == 0) {
-        if (argc != 3) {
+        if (argc != 5) {
             printf("Usage: ./write <port> <fileName> <packetSize> <timeoutSeconds> <maxTries> <BAUDRATE> \n");
             exit(-1);
         }
         else {
             fileName = argv[2];
+            packetSize = atoi(argv[3]);
             operation = TRANSMITTER;
         }
     }

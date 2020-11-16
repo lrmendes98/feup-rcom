@@ -2,6 +2,8 @@
 
 
 /* Global Variables */
+extern int packetSize;
+
 struct termios oldtio;
 unsigned int counterTries = 0;
 int frameTimout = 0;
@@ -276,7 +278,7 @@ int llclose(int fd)
 
 int llread(int fd, char* buffer)
 {   
-    int bufferSize = (PACKET_SIZE * 2) + 1;
+    int bufferSize = (packetSize * 2) + 1;
     char bufferAux[bufferSize];
     int close = 0;
     int receivedFrameSize = 0;

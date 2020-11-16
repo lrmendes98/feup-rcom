@@ -1,6 +1,7 @@
 #include "appLayer.h"
 
-
+extern char* fileName;
+extern int packetSize;
 struct FileInfo file_info;
 
 int appLayerWrite(int fd)
@@ -49,7 +50,7 @@ int appLayerWrite(int fd)
 int appLayerRead(int fd)
 {
     
-    char packet[PACKET_SIZE + 4];
+    char packet[packetSize + 4];
     *packet = 0;
     char* file_ptr;
     
@@ -75,7 +76,7 @@ int getFileInfo(char filename[]){
     stat(filename, &file_stat);
     file_info.size = file_stat.st_size;
 
-    file_info.size_per_packet = PACKET_SIZE;
+    file_info.size_per_packet = packetSize;
 
     /*file_info.size_per_packet = file_info.size / 255;
     if (file_info.size % 255 > 0) 
