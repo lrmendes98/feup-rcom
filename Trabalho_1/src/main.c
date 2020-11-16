@@ -7,22 +7,22 @@ int main(int argc, char *argv[])
 
     // Handle program arguments
     if (argc == 1) {
-        printf("Usage: ./rcom <read|write> <port> \n");
+        printf("Usage: %s <port> \n", argv[0]);
         return -1;
     }
-    else if(argc > 3 || ((strcmp("read", argv[1]) != 0) && (strcmp("write", argv[1]) != 0))) {
-        printf("Usage: ./rcom <read|write> <port> \n");
+    else if (argc > 2) {
+        printf("Usage: %s <port> \n", argv[0]);
         return -1;
-    }    
+    }
     else {
-        if (strcmp("read", argv[1]) == 0)
+        if (strcmp("./read", argv[0]) == 0) 
 		    operation = RECEIVER;
-        if (strcmp("write", argv[1]) == 0)
+        if (strcmp("./write", argv[0]) == 0)
             operation = TRANSMITTER;
     }
     
     // Open port
-    int fd = llopen(argv[2], operation);
+    int fd = llopen(argv[1], operation);
     
     if (fd < 1) 
         exit(-1);
