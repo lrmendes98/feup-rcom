@@ -355,13 +355,8 @@ int llread(int fd, char* buffer)
             bufferAuxPtr++;
             receivedFrameSize -= 2;
 
-            int stuffed_flags = numberStuffedFlags(bufferAuxPtr, receivedFrameSize);
-
-            char frame[receivedFrameSize - stuffed_flags];
-
-            destuffing(bufferAuxPtr, receivedFrameSize, frame);
-
-            receivedFrameSize -= stuffed_flags;
+            char frame[PACKET_SIZE + 50];
+            char bcc2 = destuffing(bufferAuxPtr, &receivedFrameSize, frame, buffer);
 
             //check index
             u_int8_t controlField = frame[1]; 
@@ -380,7 +375,7 @@ int llread(int fd, char* buffer)
             }
             
             // Checks if frame is correct
-            if (unBuildFrame(frame, receivedFrameSize, buffer) == -1)
+            if (unBuildFrame(frame, receivedFrameSize, buffer, bcc2) == -1)
                 error = 1;
            
             if (error) {
@@ -415,24 +410,16 @@ int llwrite(int fd, char* buffer, int length)
     static int sentFrameIndex = 0; // o emissor comeca com index 0
     
     // build frame without flags
-    int frameLength = length + 4; // address, control, BCC1 and BCC2
-    char unstuffed_frame[frameLength];
+    int frameLength = (PACKET_SIZE + 8) * 2; // address, control, BCC1 and BCC2
+    char frame[frameLength];
 
-    if(!buildFrame(buffer, length, sentFrameIndex, unstuffed_frame)) {
+    if(!buildFrame(buffer, &length, sentFrameIndex, frame)) {
         printError("Failed to build frame! \n");
         exit(-1);
-    }    
-
-    int flags_to_stuff = numberFlagsToStuff(unstuffed_frame, frameLength);
-
-    char frame[frameLength + flags_to_stuff];
-    
-    stuffing(unstuffed_frame, frameLength, frame);
-
-    frameLength += flags_to_stuff;
+    }        
 
     // insert flags
-    bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
+    bytesWritten = writeFrameWithFlags(fd, frame, length);
 
     //TEST
     //sleep(1);
@@ -480,7 +467,7 @@ int llwrite(int fd, char* buffer, int length)
             {
                 printError("Received REJ\n");
                 // resend frame
-                bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
+                bytesWritten = writeFrameWithFlags(fd, frame, length);
                 counterTries = 0;
                 continue;
             }

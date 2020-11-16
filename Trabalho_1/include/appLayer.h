@@ -34,3 +34,5 @@ char* readDataPacket(char* packet, char* file_ptr);
 char* readEndPacket(char* packet, char* file_ptr);
 
 int getFileSize(char* number_start);
+
+void progressBar(int current, int max);
