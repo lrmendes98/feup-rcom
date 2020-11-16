@@ -1,13 +1,10 @@
 #include "appLayer.h"
 
-
 struct FileInfo file_info;
 
 int appLayerWrite(int fd)
 {
-    char file_name[50] = FILE_NAME;
-
-    getFileInfo(file_name);
+    getFileInfo(fileName);
 
     int packet_size;
     char * initial_packet = buildControlPacket(2, &packet_size);
@@ -17,7 +14,7 @@ int appLayerWrite(int fd)
 
 
     FILE *filePtr;
-    filePtr = fopen(file_name,"rb");
+    filePtr = fopen(fileName,"rb");
     FILE *filePtr_copy = filePtr;
 	if (!filePtr) {
 		printf("Unable to open file!\n");
@@ -26,7 +23,7 @@ int appLayerWrite(int fd)
 
     int packet_nr = 1;
     while(packet_size > 0) {
-        char * packet = buildDataPacket(filePtr_copy, file_name, packet_nr, &packet_size); 
+        char * packet = buildDataPacket(filePtr_copy, fileName, packet_nr, &packet_size); 
         if (packet_size == 0)
             break;
         packet_nr++;
@@ -49,9 +46,8 @@ int appLayerWrite(int fd)
 }
 
 int appLayerRead(int fd)
-{
-    
-    char packet[PACKET_SIZE + 4];
+{    
+    char packet[packetSize + 4];
     *packet = 0;
     char* file_ptr;
     int total_packets = 0;
@@ -85,7 +81,7 @@ int getFileInfo(char filename[]){
     stat(filename, &file_stat);
     file_info.size = file_stat.st_size;
 
-    file_info.size_per_packet = PACKET_SIZE;
+    file_info.size_per_packet = packetSize;
 
     /*file_info.size_per_packet = file_info.size / 255;
     if (file_info.size % 255 > 0) 
@@ -100,9 +96,9 @@ char* buildControlPacket(int type, int* packet_size) {
     int size = 0;
     char* packet;
     char * file = strrchr(file_info.name, '/');
-    int file_name_size = (strlen(file_info.name) - 1) - ((long)file - (long)file_info.name);
+    int fileName_size = (strlen(file_info.name) - 1) - ((long)file - (long)file_info.name);
     file++;
-    packet = (char *) malloc(sizeof(char) * (9 + file_name_size));
+    packet = (char *) malloc(sizeof(char) * (9 + fileName_size));
     char *c = packet;
 
     size++;
@@ -132,10 +128,10 @@ char* buildControlPacket(int type, int* packet_size) {
     c++;
 
     size++;
-    *c = file_name_size;
+    *c = fileName_size;
     c++;
 
-    for (int i = 0; i < file_name_size; i++) {
+    for (int i = 0; i < fileName_size; i++) {
         size++;
         *c = *file;
         c++;

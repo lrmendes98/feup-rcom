@@ -18,6 +18,12 @@
 #include "stuffing.h"
 #include <sys/poll.h>
 
+/* Global input variables */
+extern int packetSize;
+extern int timeoutSeconds;
+extern int maxTries;
+extern int baudrate;
+
 /* Global Variables */
 extern struct termios oldtio;
 extern unsigned int counterTries;
@@ -58,6 +64,10 @@ int setOldPortAttributes(int fd);
  * @returns: 1 if succeeded, if fails, exits program
  */
 int portAttributesHandler(int fd);
+
+int llcloseTransmitter(int fd);
+
+int llcloseReceiver(int fd);
 
 /** 
  * Opens and validates link on the transmitter side

@@ -1,11 +1,8 @@
 #include "linkLayer.h"
 
-
-/* Global Variables */
 struct termios oldtio;
 unsigned int counterTries = 0;
 int frameTimout = 0;
-
 
 int receiveFrame(int fd, char* buffer)
 {
@@ -42,6 +39,7 @@ int receiveFrame(int fd, char* buffer)
 
         // check if incoming byte is frame starter flag
         if (bufferAux == FRAME_FLAG) {
+            *bufferPtr = FRAME_FLAG; 
             receivedFrameSize = 1;
             while(1) {
 				if (frameTimout){
@@ -68,8 +66,6 @@ int receiveFrame(int fd, char* buffer)
                     //read(fd, &bufferAux, 1); 
                     break;
                 } 
-
-                // TODO: Caso não receba, fazer qualquer coisa com timeouts              
             }        
             close = 1;              
         }
@@ -133,7 +129,7 @@ int portAttributesHandler(int fd)
     struct termios newtio;
 
     bzero(&newtio, sizeof(newtio));
-    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
+    newtio.c_cflag = baudrate | CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
     newtio.c_oflag = 0;
 
@@ -152,6 +148,56 @@ int portAttributesHandler(int fd)
     return 1;
 }
 
+int llcloseTransmitter(int fd)
+{
+    // Send DISC
+    printWarning("Disconecting . . .\n");
+    write(fd, FRAME_DISC, FRAME_SUPERVISION_SIZE);
+
+    // Receive DISC
+    char bufferAux[FRAME_SUPERVISION_SIZE];
+    receiveFrame(fd, bufferAux);
+
+    if (checkIfIsFrame(bufferAux, FRAME_DISC, 0)) {
+        write(fd, FRAME_UA, FRAME_SUPERVISION_SIZE);
+        printSuccess("Terminated with Success!\n\n");
+
+        return 0;
+    }
+    
+    return 1;
+}
+
+int llcloseReceiver(int fd)
+{
+    printWarning("Disconnecting . . .\n");
+
+    int close = 0;
+    while(!close) {
+        // Receive DISC
+        char bufferAux[FRAME_SUPERVISION_SIZE];
+        receiveFrame(fd, bufferAux);
+
+        if (checkIfIsFrame(bufferAux, FRAME_DISC, 0)) {
+            // Send DISC
+            write(fd, FRAME_DISC, FRAME_SUPERVISION_SIZE);
+
+            // Receive UA
+            receiveFrame(fd, bufferAux);
+
+            if (checkIfIsFrame(bufferAux, FRAME_UA, 0)) {
+                printSuccess("Terminated with Success!\n\n");
+                return 0;
+            }
+        }
+        else {
+            continue;
+        }
+    }
+
+    return 1;
+}
+
 int llopenTransmitter(int fd)
 {
     int currentCount, readSize = 0;
@@ -159,12 +205,12 @@ int llopenTransmitter(int fd)
 
     write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
 
-    alarm(TIMEOUT);    
+    alarm(timeoutSeconds);    
     
     while(counterTries < MAXTRIES) {
         if (currentCount != counterTries) {
             currentCount = counterTries;
-            alarm(TIMEOUT);
+            alarm(timeoutSeconds);
             write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
         }
 
@@ -276,7 +322,7 @@ int llclose(int fd)
 
 int llread(int fd, char* buffer)
 {   
-    int bufferSize = (PACKET_SIZE * 2) + 1;
+    int bufferSize = (packetSize * 2) + 20;
     char bufferAux[bufferSize];
     int close = 0;
     int receivedFrameSize = 0;
@@ -290,8 +336,8 @@ int llread(int fd, char* buffer)
 
         // Receives Information frame
         int readTimeout = 2;
-        if (TIMEOUT >= 4)
-			readTimeout = TIMEOUT - 2;
+        if (timeoutSeconds >= 4)
+			readTimeout = timeoutSeconds - 2;
         alarm(readTimeout);
         receivedFrameSize = receiveFrame(fd, bufferAux);
         alarm(0);
@@ -381,13 +427,13 @@ int llwrite(int fd, char* buffer, int length)
     int currentCount = 0;
     counterTries = 0;
 
-    alarm(TIMEOUT); 
+    alarm(timeoutSeconds); 
 
     while(counterTries < MAXTRIES) {
         if (currentCount != counterTries) {
             currentCount = counterTries;
-            alarm(TIMEOUT);
-            bytesWritten = writeFrameWithFlags(fd, frame, length);
+            alarm(timeoutSeconds);
+            bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
         }
 
         struct pollfd fds[1];

@@ -2,30 +2,30 @@
 
 int writeFrameWithFlags(int fd, char frame[], int frameLength)
 {
-    char currentBcc1;
-    char currentBcc2;
-    char currentIndex;
+    // char currentBcc1;
+    // char currentBcc2;
+    // char currentIndex;
 
-    if (ENABLE_CURRUPT_FRAME_TESTS) {
-        currentBcc1 = frame[2];
-        currentBcc2 = frame[frameLength - 2];
-        currentIndex = frame[1];
-        int res = rand() % 20;
-        if (res == 0) {
-            frame[2] = 0;
-        }
-        if (res == 1) {
-            frame[frameLength - 2] = 0;
-        }
-        if (res == 2) {
-            if (frame[1] == FRAME_CONTROL_FIELD_SEND0) {
-                frame[1] = FRAME_CONTROL_FIELD_SEND1;
-            }
-            else {
-                frame[1] = FRAME_CONTROL_FIELD_SEND0;
-            }
-        }
-    }
+    // if (ENABLE_CURRUPT_FRAME_TESTS) {
+    //     currentBcc1 = frame[2];
+    //     currentBcc2 = frame[frameLength - 2];
+    //     currentIndex = frame[1];
+    //     int res = rand() % 20;
+    //     if (res == 0) {
+    //         frame[2] = 0;
+    //     }
+    //     if (res == 1) {
+    //         frame[frameLength - 2] = 0;
+    //     }
+    //     if (res == 2) {
+    //         if (frame[1] == FRAME_CONTROL_FIELD_SEND0) {
+    //             frame[1] = FRAME_CONTROL_FIELD_SEND1;
+    //         }
+    //         else {
+    //             frame[1] = FRAME_CONTROL_FIELD_SEND0;
+    //         }
+    //     }
+    // }
 
     char flag = FRAME_FLAG;
     int writtenSize = write(fd, &flag, 1);
@@ -36,11 +36,11 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength)
     
     //printf("Bytes written = %d\n", writtenSize);
 
-    if (ENABLE_CURRUPT_FRAME_TESTS) {
-        frame[frameLength - 2] = currentBcc2;
-        frame[2] = currentBcc1;
-        frame[1] = currentIndex;
-    }
+    // if (ENABLE_CURRUPT_FRAME_TESTS) {
+    //     frame[frameLength - 2] = currentBcc2;
+    //     frame[2] = currentBcc1;
+    //     frame[1] = currentIndex;
+    // }
     
     return writtenSize;
 }
