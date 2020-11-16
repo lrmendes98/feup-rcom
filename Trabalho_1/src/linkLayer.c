@@ -13,11 +13,11 @@ int receiveFrame(int fd, char* buffer)
     int close = 0;
     int receivedFrameSize = -1;
 
-    struct pollfd fds[1];
+    /*struct pollfd fds[1];
     fds[0].fd = fd;
     fds[0].events = 0;
     fds[0].events |= POLLIN;
-    int retval;
+    int retval;*/
 
     while (!close) {
 		if (frameTimout){
@@ -31,10 +31,10 @@ int receiveFrame(int fd, char* buffer)
 				return 0;
 			}
             readtries++;            
-            retval = poll(fds, 1, 0);
-            if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
-                readSize = read(fd, &bufferAux, 1);
-            }
+            //retval = poll(fds, 1, 0);
+            //if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
+            readSize = read(fd, &bufferAux, 1);
+            //}
         }
 
         // check if incoming byte is frame starter flag
@@ -46,13 +46,15 @@ int receiveFrame(int fd, char* buffer)
 					frameTimout = 0;
 					return 0;
 				}
-                retval = poll(fds, 1, 0);
-                if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
-                    read(fd, &bufferAux, 1); 
+                //retval = poll(fds, 1, 0);
+                //if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
+                readSize = read(fd, &bufferAux, 1); 
+                if (readSize != 0) {
                     receivedFrameSize++;
                     bufferPtr++;
                     *bufferPtr = bufferAux;
                 }
+                //}
                 //printf("%X ", (u_int8_t)bufferAux);
                 if(bufferAux == FRAME_FLAG) {
                     if (receivedFrameSize == 2) {
