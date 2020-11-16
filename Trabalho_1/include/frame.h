@@ -12,6 +12,7 @@
 #include <termios.h>
 #include "macros.h"
 #include "auxiliar.h"
+#include "stuffing.h"
 #include <time.h>
 
 
@@ -58,7 +59,7 @@ static const unsigned char FRAME_DISC[] = {FRAME_FLAG,
                                         FRAME_FLAG};
 
 
-int unBuildFrame(char* frame, int frameLength, char* outputPacket);
+int unBuildFrame(char* frame, int frameLength, char* outputPacket, char bcc2);
 
 int writeFrameWithFlags(int fd, char frame[], int frameLength);
 
@@ -70,7 +71,7 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength);
  * @param frame: Output argument that contains the complete frame
  * @return: 1 if success, 0 if fails
  */ 
-int buildFrame(char* packet, int packetLength, int index, char* frame);
+int buildFrame(char* packet, int* packetLength, int index, char* frame);
 
 /**
  * Returns the frame index

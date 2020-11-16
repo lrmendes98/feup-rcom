@@ -94,9 +94,9 @@ int getFrameIndex(char frame[])
     return -1;
 }
 
-int buildFrame(char* packet, int packetLength, int index, char* frame)
+int buildFrame(char* packet, int* packetLength, int index, char* frame)
 {
-    if ((packet == NULL) || (packetLength <= 0) || (frame == NULL) || 
+    if ((packet == NULL) || (*packetLength <= 0) || (frame == NULL) || 
         (index & ~1))
     {
         printError("wth are you doing men... \n");
@@ -111,25 +111,17 @@ int buildFrame(char* packet, int packetLength, int index, char* frame)
 
     // insert BCC1
     frame[2] = frame[0] ^ frame[1];
-    //printf("bcc1: %X\n", frame[2]);
 
+    (*packetLength) += 3;
 
-    // insert packet content and calculate BCC2, its easier when inserting :)
-    char bcc2 = 0;
-    for (int i = 0; i < packetLength; i++) {
-        frame[i + 3] = packet[i];
-        bcc2 ^= packet[i];
-    }
+    stuffing(packet, packetLength, frame);
 
     //printf("bcc2: %X\n", bcc2);
-
-    // insert BCC2
-    frame[packetLength + 3] = bcc2;
 
     return 1;
 }
 
-int unBuildFrame(char* frame, int frameLength, char* outputPacket)
+int unBuildFrame(char* frame, int frameLength, char* outputPacket, char bcc2)
 {
     if ((frame == NULL) || (frameLength <= 0) || (outputPacket == NULL)) {
         printError("wth are you doing men... \n");
@@ -147,17 +139,14 @@ int unBuildFrame(char* frame, int frameLength, char* outputPacket)
         printError("Incorrect BCC1! \n");
         return -1;
     }
-
-    char correctBcc2 = 0;
-    for (int i = 0; i < frameLength - 4; i++) {
-        outputPacket[i] = frame[i + 3];
-        correctBcc2 ^= outputPacket[i];
-    }
     
-    char bcc2 = frame[frameLength - 1];
+    char correctBcc2 = frame[frameLength - 1];
+
+    //printf("%X\n", (uint8_t)bcc2);
     
     if (correctBcc2 != bcc2) {
         printError("Incorrect bcc2! \n");
+        //printf("%X\n", (uint8_t)correctBcc2);
         return -1;
     }    
 
