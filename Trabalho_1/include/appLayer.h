@@ -2,7 +2,10 @@
 
 #include "linkLayer.h"
 #include "auxiliar.h"
-#include "variables.h"
+
+/* Global input variables */
+extern char* fileName;
+extern int packetSize;
 
 struct FileInfo {
     char * name;

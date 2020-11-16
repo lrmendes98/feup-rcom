@@ -1,13 +1,8 @@
 #include "linkLayer.h"
 
-
-/* Global Variables */
-extern int packetSize;
-
 struct termios oldtio;
 unsigned int counterTries = 0;
 int frameTimout = 0;
-
 
 int receiveFrame(int fd, char* buffer)
 {
@@ -135,7 +130,7 @@ int portAttributesHandler(int fd)
     struct termios newtio;
 
     bzero(&newtio, sizeof(newtio));
-    newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
+    newtio.c_cflag = baudrate | CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
     newtio.c_oflag = 0;
 
@@ -161,12 +156,12 @@ int llopenTransmitter(int fd)
 
     write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
 
-    alarm(TIMEOUT);    
+    alarm(timeoutSeconds);    
     
     while(counterTries < MAXTRIES) {
         if (currentCount != counterTries) {
             currentCount = counterTries;
-            alarm(TIMEOUT);
+            alarm(timeoutSeconds);
             write(fd, FRAME_SET, FRAME_SUPERVISION_SIZE);
         }
 
@@ -292,8 +287,8 @@ int llread(int fd, char* buffer)
 
         // Receives Information frame
         int readTimeout = 2;
-        if (TIMEOUT >= 4)
-			readTimeout = TIMEOUT - 2;
+        if (timeoutSeconds >= 4)
+			readTimeout = timeoutSeconds - 2;
         alarm(readTimeout);
         receivedFrameSize = receiveFrame(fd, bufferAux);
         alarm(0);
@@ -396,12 +391,12 @@ int llwrite(int fd, char* buffer, int length)
     int currentCount = 0;
     counterTries = 0;
 
-    alarm(TIMEOUT); 
+    alarm(timeoutSeconds); 
 
     while(counterTries < MAXTRIES) {
         if (currentCount != counterTries) {
             currentCount = counterTries;
-            alarm(TIMEOUT);
+            alarm(timeoutSeconds);
             bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
         }
 

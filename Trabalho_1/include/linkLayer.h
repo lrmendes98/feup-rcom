@@ -18,6 +18,12 @@
 #include "stuffing.h"
 #include <sys/poll.h>
 
+/* Global input variables */
+extern int packetSize;
+extern int timeoutSeconds;
+extern int maxTries;
+extern int baudrate;
+
 /* Global Variables */
 extern struct termios oldtio;
 extern unsigned int counterTries;

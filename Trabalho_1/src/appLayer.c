@@ -1,7 +1,5 @@
 #include "appLayer.h"
 
-extern char* fileName;
-extern int packetSize;
 struct FileInfo file_info;
 
 int appLayerWrite(int fd)
@@ -48,8 +46,7 @@ int appLayerWrite(int fd)
 }
 
 int appLayerRead(int fd)
-{
-    
+{    
     char packet[packetSize + 4];
     *packet = 0;
     char* file_ptr;
