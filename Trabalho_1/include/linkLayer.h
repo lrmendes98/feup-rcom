@@ -65,6 +65,10 @@ int setOldPortAttributes(int fd);
  */
 int portAttributesHandler(int fd);
 
+int llcloseTransmitter(int fd);
+
+int llcloseReceiver(int fd);
+
 /** 
  * Opens and validates link on the transmitter side
  * @param fd: File descriptor

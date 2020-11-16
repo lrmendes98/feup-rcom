@@ -38,6 +38,8 @@ int main(int argc, char *argv[])
             operation = TRANSMITTER;
         }
     }
+
+    printf("\n");
     
     // Open port
     int fd = llopen(argv[1], operation);
@@ -48,11 +50,16 @@ int main(int argc, char *argv[])
     srand(time(NULL));
     
     if (operation == TRANSMITTER)
-        appLayerWrite(fd);
+        appLayerWrite(fd);    
+        
     else if (operation == RECEIVER)
         appLayerRead(fd);  
 
-    llclose(fd);  
-
+    if (operation == TRANSMITTER)
+        llcloseTransmitter(fd);
+        
+    else if (operation == RECEIVER)
+        llcloseReceiver(fd);  
+    
     return 0;
 }
