@@ -2,6 +2,7 @@
 
 #include "linkLayer.h"
 #include "auxiliar.h"
+#include "variables.h"
 
 struct FileInfo {
     char * name;

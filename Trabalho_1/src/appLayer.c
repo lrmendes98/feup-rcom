@@ -5,9 +5,7 @@ struct FileInfo file_info;
 
 int appLayerWrite(int fd)
 {
-    char file_name[50] = FILE_NAME;
-
-    getFileInfo(file_name);
+    getFileInfo(fileName);
 
     int packet_size;
     char * initial_packet = buildControlPacket(2, &packet_size);
@@ -17,7 +15,7 @@ int appLayerWrite(int fd)
 
 
     FILE *filePtr;
-    filePtr = fopen(file_name,"rb");
+    filePtr = fopen(fileName,"rb");
     FILE *filePtr_copy = filePtr;
 	if (!filePtr) {
 		printf("Unable to open file!\n");
@@ -26,7 +24,7 @@ int appLayerWrite(int fd)
 
     int packet_nr = 1;
     while(packet_size > 0) {
-        char * packet = buildDataPacket(filePtr_copy, file_name, packet_nr, &packet_size); 
+        char * packet = buildDataPacket(filePtr_copy, fileName, packet_nr, &packet_size); 
         if (packet_size == 0)
             break;
         packet_nr++;
@@ -92,9 +90,9 @@ char* buildControlPacket(int type, int* packet_size) {
     int size = 0;
     char* packet;
     char * file = strrchr(file_info.name, '/');
-    int file_name_size = (strlen(file_info.name) - 1) - ((long)file - (long)file_info.name);
+    int fileName_size = (strlen(file_info.name) - 1) - ((long)file - (long)file_info.name);
     file++;
-    packet = (char *) malloc(sizeof(char) * (9 + file_name_size));
+    packet = (char *) malloc(sizeof(char) * (9 + fileName_size));
     char *c = packet;
 
     size++;
@@ -124,10 +122,10 @@ char* buildControlPacket(int type, int* packet_size) {
     c++;
 
     size++;
-    *c = file_name_size;
+    *c = fileName_size;
     c++;
 
-    for (int i = 0; i < file_name_size; i++) {
+    for (int i = 0; i < fileName_size; i++) {
         size++;
         *c = *file;
         c++;

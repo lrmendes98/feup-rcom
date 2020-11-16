@@ -1,24 +1,33 @@
 #include "macros.h"
+#include "variables.h"
 #include "appLayer.h"
+
+/* Global variables */
+char* fileName;
 
 int main(int argc, char *argv[])
 {
     int operation = -1;
 
     // Handle program arguments
-    if (argc == 1) {
-        printf("Usage: %s <port> \n", argv[0]);
-        return -1;
+    if (strcmp("./read", argv[0]) == 0) {
+        if (argc != 2) {
+            printf("Usage: ./read <port>\n");
+            exit(-1);
+        }
+        else {
+            operation = RECEIVER;
+        }
     }
-    else if (argc > 2) {
-        printf("Usage: %s <port> \n", argv[0]);
-        return -1;
-    }
-    else {
-        if (strcmp("./read", argv[0]) == 0) 
-		    operation = RECEIVER;
-        if (strcmp("./write", argv[0]) == 0)
+    if (strcmp("./write", argv[0]) == 0) {
+        if (argc != 3) {
+            printf("Usage: ./write <port> <fileName> <packetSize> <timeoutSeconds> <maxTries> <BAUDRATE> \n");
+            exit(-1);
+        }
+        else {
+            fileName = argv[2];
             operation = TRANSMITTER;
+        }
     }
     
     // Open port
