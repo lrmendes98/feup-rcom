@@ -204,7 +204,7 @@ char* readStartPacket(char* packet, char* file_ptr){
     int size = getFileSize(packet + 3);
     file_ptr = malloc(sizeof(char) * size);
     file_info.size = size;
-    file_info.size_per_packet = PACKET_SIZE;
+    file_info.size_per_packet = packetSize;
     return file_ptr;
 }
 

@@ -355,7 +355,7 @@ int llread(int fd, char* buffer)
             bufferAuxPtr++;
             receivedFrameSize -= 2;
 
-            char frame[PACKET_SIZE + 50];
+            char frame[packetSize + 50];
             char bcc2 = destuffing(bufferAuxPtr, &receivedFrameSize, frame, buffer);
 
             //check index
@@ -410,7 +410,7 @@ int llwrite(int fd, char* buffer, int length)
     static int sentFrameIndex = 0; // o emissor comeca com index 0
     
     // build frame without flags
-    int frameLength = (PACKET_SIZE + 8) * 2; // address, control, BCC1 and BCC2
+    int frameLength = (packetSize + 8) * 2; // address, control, BCC1 and BCC2
     char frame[frameLength];
 
     if(!buildFrame(buffer, &length, sentFrameIndex, frame)) {
@@ -433,7 +433,7 @@ int llwrite(int fd, char* buffer, int length)
         if (currentCount != counterTries) {
             currentCount = counterTries;
             alarm(timeoutSeconds);
-            bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
+            bytesWritten = writeFrameWithFlags(fd, frame, length);
         }
 
         struct pollfd fds[1];
