@@ -50,10 +50,11 @@ int appLayerWrite(int fd)
 
 int appLayerRead(int fd)
 {
-    
     char packet[PACKET_SIZE + 4];
     *packet = 0;
     char* file_ptr;
+    int total_packets = 0;
+    int packet_nr = 0;
     
     while(*packet != 3) {
         // Read bytes
@@ -61,6 +62,12 @@ int appLayerRead(int fd)
             return -1;
         
         file_ptr = readPacket(packet, file_ptr);
+
+        if (packet_nr == 0) {
+            total_packets = (file_info.size / file_info.size_per_packet) + 3;
+        }
+        packet_nr++;
+        progressBar(packet_nr, total_packets);
     }
 
     printSuccess("All frames received!\n");
@@ -199,6 +206,8 @@ char* readPacket(char* packet, char* file_ptr) {
 char* readStartPacket(char* packet, char* file_ptr){
     int size = getFileSize(packet + 3);
     file_ptr = malloc(sizeof(char) * size);
+    file_info.size = size;
+    file_info.size_per_packet = PACKET_SIZE;
     return file_ptr;
 }
 
@@ -250,4 +259,36 @@ int getFileSize(char* number_start) {
     number_start++;
     size += (u_int8_t)*number_start;
     return size;
+}
+
+void progressBar(int current, int max)
+{
+    if(max < 100) {
+        putchar('[');
+        for(int iter = 0; iter < current; iter++)
+            putchar('#');
+        for(int iter = 0; iter < (max-current); iter++)
+            putchar(' ');
+
+        int percentageTo100 = (current*100) / max;
+        printf("] %3d%% done", percentageTo100);
+        for(int i = 0; i < (max+2+10); i++)
+            putchar('\r');
+        fflush(stdout);
+    }
+    else {
+        int percentageTo100 = (current*100) / max;
+        putchar('[');
+        for(int iter = 0; iter < percentageTo100; iter++)
+            putchar('#');
+        for(int iter = 0; iter < (100-percentageTo100); iter++)
+            putchar(' ');
+
+        printf("] %3d%% done", percentageTo100);
+        for(int i = 0; i < (100+2+10); i++)
+            putchar('\r');
+        fflush(stdout);
+    }
+
+    return;
 }
