@@ -9,6 +9,9 @@ int frameTimout = 0;
 
 int receiveFrame(int fd, char* buffer)
 {
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
     char bufferAux;
     char* bufferPtr = buffer;    
     
@@ -42,6 +45,9 @@ int receiveFrame(int fd, char* buffer)
 
         // check if incoming byte is frame starter flag
         if (bufferAux == FRAME_FLAG) {
+            end = clock();
+            cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+            printf("receive frame 1a frame flag %f seconds to execute \n", cpu_time_used);
             receivedFrameSize = 1;
             while(1) {
 				if (frameTimout){
@@ -55,9 +61,9 @@ int receiveFrame(int fd, char* buffer)
                     bufferPtr++;
                     *bufferPtr = bufferAux;
                 }
-                /*else {
+                else {
                     printf("a\n");
-                }*/
+                }
                 //printf("%X ", (u_int8_t)bufferAux);
                 if(bufferAux == FRAME_FLAG) {
                     if (receivedFrameSize == 2) {
@@ -69,6 +75,9 @@ int receiveFrame(int fd, char* buffer)
                     *bufferPtr = bufferAux;
                     bufferPtr++;
                     //read(fd, &bufferAux, 1); 
+                    end = clock();
+                    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+                    printf("receive frame 2a frame flag %f seconds to execute \n", cpu_time_used);
                     break;
                 } 
 
@@ -296,13 +305,7 @@ int llread(int fd, char* buffer)
         if (TIMEOUT >= 4)
 			readTimeout = TIMEOUT - 2;
         alarm(readTimeout);
-        clock_t start, end;
-        double cpu_time_used;
-        start = clock();
         receivedFrameSize = receiveFrame(fd, bufferAux);
-        end = clock();
-        cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-        printf("receive frame took %f seconds to execute \n", cpu_time_used);
         alarm(0);
 
         if (receivedFrameSize != -1) {

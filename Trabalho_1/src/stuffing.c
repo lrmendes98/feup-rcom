@@ -2,13 +2,14 @@
 
 int stuffing(char* packet, int* packet_size, char* stuffed_bytes) {
 
-    char bcc2 = 0;
-    int current_size = *packet_size;
-
     char first_bytes[3];
     first_bytes[0] = stuffed_bytes[0];
     first_bytes[1] = stuffed_bytes[1]; 
-    first_bytes[2] = stuffed_bytes[2]; 
+    first_bytes[2] = stuffed_bytes[2];
+    *stuffed_bytes = 0x7e;
+    stuffed_bytes++;
+    char bcc2 = 0;
+    int current_size = *packet_size; 
 
     for (int i = 0; i < 3; i++) {
         if ((u_int8_t)first_bytes[i] == 0x7e) {
@@ -66,6 +67,9 @@ int stuffing(char* packet, int* packet_size, char* stuffed_bytes) {
     else {
         *stuffed_bytes = bcc2;
     }
+    stuffed_bytes++;
+    *stuffed_bytes = 0x7e;
+    (*packet_size) += 2;
 
     return 0;
 }

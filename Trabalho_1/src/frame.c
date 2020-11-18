@@ -2,9 +2,6 @@
 
 int writeFrameWithFlags(int fd, char frame[], int frameLength)
 {
-    clock_t start, end;
-    double cpu_time_used;
-    start = clock();
     // char currentBcc1;
     // char currentBcc2;
     // char currentIndex;
@@ -30,12 +27,11 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength)
     //     }
     // }
 
-    char flag = FRAME_FLAG;
-    int writtenSize = write(fd, &flag, 1);
+    int writtenSize;// = write(fd, &flag, 1);
 
     //send frame
-    writtenSize += write(fd, frame, frameLength);
-    writtenSize += write(fd, &flag, 1);
+    writtenSize = write(fd, frame, frameLength);
+    //writtenSize += write(fd, &flag, 1);
     
     //printf("Bytes written = %d\n", writtenSize);
 
@@ -44,11 +40,6 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength)
     //     frame[2] = currentBcc1;
     //     frame[1] = currentIndex;
     // }
-
-    end = clock();
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("write frame took %f seconds to execute \n", cpu_time_used);
-    
     return writtenSize;
 }
 
