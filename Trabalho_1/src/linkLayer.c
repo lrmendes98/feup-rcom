@@ -39,6 +39,7 @@ int receiveFrame(int fd, char* buffer)
 
         // check if incoming byte is frame starter flag
         if (bufferAux == FRAME_FLAG) {
+            bufferAux = 0;
             *bufferPtr = FRAME_FLAG; 
             receivedFrameSize = 1;
             while(1) {
