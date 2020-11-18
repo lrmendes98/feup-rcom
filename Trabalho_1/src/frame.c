@@ -2,30 +2,33 @@
 
 int writeFrameWithFlags(int fd, char frame[], int frameLength)
 {
-    char currentBcc1;
-    char currentBcc2;
-    char currentIndex;
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
+    // char currentBcc1;
+    // char currentBcc2;
+    // char currentIndex;
 
-    if (ENABLE_CURRUPT_FRAME_TESTS) {
-        currentBcc1 = frame[2];
-        currentBcc2 = frame[frameLength - 2];
-        currentIndex = frame[1];
-        int res = rand() % 20;
-        if (res == 0) {
-            frame[2] = 0;
-        }
-        if (res == 1) {
-            frame[frameLength - 2] = 0;
-        }
-        if (res == 2) {
-            if (frame[1] == FRAME_CONTROL_FIELD_SEND0) {
-                frame[1] = FRAME_CONTROL_FIELD_SEND1;
-            }
-            else {
-                frame[1] = FRAME_CONTROL_FIELD_SEND0;
-            }
-        }
-    }
+    // if (ENABLE_CURRUPT_FRAME_TESTS) {
+    //     currentBcc1 = frame[2];
+    //     currentBcc2 = frame[frameLength - 2];
+    //     currentIndex = frame[1];
+    //     int res = rand() % 20;
+    //     if (res == 0) {
+    //         frame[2] = 0;
+    //     }
+    //     if (res == 1) {
+    //         frame[frameLength - 2] = 0;
+    //     }
+    //     if (res == 2) {
+    //         if (frame[1] == FRAME_CONTROL_FIELD_SEND0) {
+    //             frame[1] = FRAME_CONTROL_FIELD_SEND1;
+    //         }
+    //         else {
+    //             frame[1] = FRAME_CONTROL_FIELD_SEND0;
+    //         }
+    //     }
+    // }
 
     char flag = FRAME_FLAG;
     int writtenSize = write(fd, &flag, 1);
@@ -36,11 +39,15 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength)
     
     //printf("Bytes written = %d\n", writtenSize);
 
-    if (ENABLE_CURRUPT_FRAME_TESTS) {
-        frame[frameLength - 2] = currentBcc2;
-        frame[2] = currentBcc1;
-        frame[1] = currentIndex;
-    }
+    // if (ENABLE_CURRUPT_FRAME_TESTS) {
+    //     frame[frameLength - 2] = currentBcc2;
+    //     frame[2] = currentBcc1;
+    //     frame[1] = currentIndex;
+    // }
+
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("write frame took %f seconds to execute \n", cpu_time_used);
     
     return writtenSize;
 }
@@ -94,15 +101,8 @@ int getFrameIndex(char frame[])
     return -1;
 }
 
-int buildFrame(char* packet, int packetLength, int index, char* frame)
+int buildFrame(char* packet, int* packetLength, int index, char* frame)
 {
-    if ((packet == NULL) || (packetLength <= 0) || (frame == NULL) || 
-        (index & ~1))
-    {
-        printError("wth are you doing men... \n");
-        exit(-1);
-    }
-
     // insert address
     frame[0] = FRAME_ADDRESS_FIELD_TYPE1;
 
@@ -111,31 +111,19 @@ int buildFrame(char* packet, int packetLength, int index, char* frame)
 
     // insert BCC1
     frame[2] = frame[0] ^ frame[1];
-    //printf("bcc1: %X\n", frame[2]);
 
+    (*packetLength) += 3;
 
-    // insert packet content and calculate BCC2, its easier when inserting :)
-    char bcc2 = 0;
-    for (int i = 0; i < packetLength; i++) {
-        frame[i + 3] = packet[i];
-        bcc2 ^= packet[i];
-    }
+    stuffing(packet, packetLength, frame);
 
     //printf("bcc2: %X\n", bcc2);
-
-    // insert BCC2
-    frame[packetLength + 3] = bcc2;
 
     return 1;
 }
 
+
 int unBuildFrame(char* frame, int frameLength, char* outputPacket)
 {
-    if ((frame == NULL) || (frameLength <= 0) || (outputPacket == NULL)) {
-        printError("wth are you doing men... \n");
-        exit(-1);
-    }
-
     //u_int8_t addressField = frame[0];
     
     u_int8_t bcc1 = frame[2]; 

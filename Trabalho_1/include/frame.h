@@ -12,6 +12,7 @@
 #include <termios.h>
 #include "macros.h"
 #include "auxiliar.h"
+#include "stuffing.h"
 #include <time.h>
 
 
@@ -70,7 +71,7 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength);
  * @param frame: Output argument that contains the complete frame
  * @return: 1 if success, 0 if fails
  */ 
-int buildFrame(char* packet, int packetLength, int index, char* frame);
+int buildFrame(char* packet, int* packetLength, int index, char* frame);
 
 /**
  * Returns the frame index

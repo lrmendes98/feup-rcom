@@ -55,6 +55,9 @@ int receiveFrame(int fd, char* buffer)
                     bufferPtr++;
                     *bufferPtr = bufferAux;
                 }
+                /*else {
+                    printf("a\n");
+                }*/
                 //printf("%X ", (u_int8_t)bufferAux);
                 if(bufferAux == FRAME_FLAG) {
                     if (receivedFrameSize == 2) {
@@ -140,7 +143,7 @@ int portAttributesHandler(int fd)
     newtio.c_lflag = 0;
 
     newtio.c_cc[VTIME] = 0;
-    newtio.c_cc[VMIN] = 1;
+    newtio.c_cc[VMIN] = 0;
 
     tcflush(fd, TCIOFLUSH);
 
@@ -293,7 +296,13 @@ int llread(int fd, char* buffer)
         if (TIMEOUT >= 4)
 			readTimeout = TIMEOUT - 2;
         alarm(readTimeout);
+        clock_t start, end;
+        double cpu_time_used;
+        start = clock();
         receivedFrameSize = receiveFrame(fd, bufferAux);
+        end = clock();
+        cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+        printf("receive frame took %f seconds to execute \n", cpu_time_used);
         alarm(0);
 
         if (receivedFrameSize != -1) {
@@ -369,24 +378,16 @@ int llwrite(int fd, char* buffer, int length)
     static int sentFrameIndex = 0; // o emissor comeca com index 0
     
     // build frame without flags
-    int frameLength = length + 4; // address, control, BCC1 and BCC2
-    char unstuffed_frame[frameLength];
+    int frameLength = (PACKET_SIZE + 8) * 2; // address, control, BCC1 and BCC2
+    char frame[frameLength];
 
-    if(!buildFrame(buffer, length, sentFrameIndex, unstuffed_frame)) {
+    if(!buildFrame(buffer, &length, sentFrameIndex, frame)) {
         printError("Failed to build frame! \n");
         exit(-1);
     }    
-
-    int flags_to_stuff = numberFlagsToStuff(unstuffed_frame, frameLength);
-
-    char frame[frameLength + flags_to_stuff];
     
-    stuffing(unstuffed_frame, frameLength, frame);
-
-    frameLength += flags_to_stuff;
-
     // insert flags
-    bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
+    bytesWritten = writeFrameWithFlags(fd, frame, length);
 
     //TEST
     //sleep(1);
@@ -400,7 +401,7 @@ int llwrite(int fd, char* buffer, int length)
         if (currentCount != counterTries) {
             currentCount = counterTries;
             alarm(TIMEOUT);
-            bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
+            bytesWritten = writeFrameWithFlags(fd, frame, length);
         }
 
         struct pollfd fds[1];
@@ -434,7 +435,7 @@ int llwrite(int fd, char* buffer, int length)
             {
                 printError("Received REJ\n");
                 // resend frame
-                bytesWritten = writeFrameWithFlags(fd, frame, frameLength);
+                bytesWritten = writeFrameWithFlags(fd, frame, length);
                 counterTries = 0;
                 continue;
             }
