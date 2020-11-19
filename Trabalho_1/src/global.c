@@ -1,5 +1,7 @@
+#include <termios.h>
+
 char* fileName;
 int packetSize;
 int timeoutSeconds;
 int maxTries;
-int baudrate;
+speed_t baudrate;

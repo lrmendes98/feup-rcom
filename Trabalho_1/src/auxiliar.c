@@ -84,7 +84,7 @@ char* printSuccess(char* msg)
   return 0;
 }
 
-int get_baud(int baud)
+speed_t getBaudRate(int baud)
 {
     switch (baud) {
     case 9600:
@@ -123,7 +123,9 @@ int get_baud(int baud)
         return B3500000;
     case 4000000:
         return B4000000;
-    default: 
+    default:
+        printError("Unrecognized baudrate!\n");
+        exit(-1); 
         return -1;
     }
 }

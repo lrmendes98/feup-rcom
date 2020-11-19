@@ -28,4 +28,4 @@ char* printSuccess(char* msg);
 */
 int exportFile(char* path, char** content); 
 
-int get_baud(int baud);
+speed_t getBaudRate(int baud);

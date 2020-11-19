@@ -8,7 +8,7 @@ extern char* fileName;
 extern int packetSize;
 extern int timeoutSeconds;
 extern int maxTries;
-extern int baudrate;
+extern speed_t baudrate;
 
 int main(int argc, char *argv[])
 {
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
             packetSize = atoi(argv[3]);
             timeoutSeconds = atoi(argv[4]);
             maxTries = atoi(argv[5]);
-            baudrate = B38400;
+            baudrate = getBaudRate(atoi(argv[6]));
 
             operation = TRANSMITTER;
         }
