@@ -1,6 +1,5 @@
 #include "macros.h"
 #include "appLayer.h"
-#include <termios.h>
 
 
 /* Global input variables */
@@ -8,7 +7,6 @@ extern char* fileName;
 extern int packetSize;
 extern int timeoutSeconds;
 extern int maxTries;
-extern speed_t baudrate;
 
 int main(int argc, char *argv[])
 {
@@ -26,8 +24,8 @@ int main(int argc, char *argv[])
         }
     }
     if (strcmp("./write", argv[0]) == 0) {
-        if (argc != 7) {
-            printf("Usage: ./write <port> <fileName> <packetSize> <timeoutSeconds> <maxTries> <baudrate> \n");
+        if (argc != 6) {
+            printf("Usage: ./write <port> <fileName> <packetSize> <timeoutSeconds> <maxTries> \n");
             exit(-1);
         }
         else {
@@ -35,7 +33,6 @@ int main(int argc, char *argv[])
             packetSize = atoi(argv[3]);
             timeoutSeconds = atoi(argv[4]);
             maxTries = atoi(argv[5]);
-            baudrate = getBaudRate(atoi(argv[6]));
 
             operation = TRANSMITTER;
         }

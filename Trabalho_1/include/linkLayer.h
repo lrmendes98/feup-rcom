@@ -22,7 +22,6 @@
 extern int packetSize;
 extern int timeoutSeconds;
 extern int maxTries;
-extern speed_t baudrate;
 
 /* Global Variables */
 extern struct termios oldtio;
