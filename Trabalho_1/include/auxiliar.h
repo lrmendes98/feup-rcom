@@ -6,6 +6,8 @@
 #include <fcntl.h>  
 #include <stdio.h>
 #include <time.h>
+#include <termios.h>
+
 
 
 char* stringAdd(const char *s1, const char *s2);
@@ -26,3 +28,4 @@ char* printSuccess(char* msg);
 */
 int exportFile(char* path, char** content); 
 
+int get_baud(int baud);

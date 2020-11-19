@@ -24,3 +24,5 @@ extern int maxTries;
 #define FRAME_START_FLAG 0x02
 #define FRAME_END_FLAG 0x03
 #define ESCAPE_CHAR 0x7D
+
+#define BAUDRATE B38400

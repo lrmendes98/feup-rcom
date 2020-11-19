@@ -1,5 +1,7 @@
 #include "macros.h"
 #include "appLayer.h"
+#include <termios.h>
+
 
 /* Global input variables */
 extern char* fileName;
@@ -33,7 +35,7 @@ int main(int argc, char *argv[])
             packetSize = atoi(argv[3]);
             timeoutSeconds = atoi(argv[4]);
             maxTries = atoi(argv[5]);
-            baudrate = atoi(argv[6]);
+            baudrate = B38400;
 
             operation = TRANSMITTER;
         }
