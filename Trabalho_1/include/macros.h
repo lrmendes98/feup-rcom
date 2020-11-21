@@ -5,7 +5,7 @@ extern int maxTries;
 //#define BAUDRATE B9600
 //#define BAUDRATE B38400
 //#define BAUDRATE B57600
-#define BAUDRATE B460800
+#define BAUDRATE B115200
 
 #define RECEIVER 0
 #define TRANSMITTER 1
