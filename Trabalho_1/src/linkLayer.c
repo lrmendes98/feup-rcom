@@ -19,10 +19,6 @@ int receiveFrame(int fd, char* buffer)
     fds[0].events |= POLLIN;
     int retval;
 
-    clock_t start, end;
-    double cpu_time_used;
-    start = clock();
-
     while (!close) {
 		if (frameTimout){
 			frameTimout = 0;
@@ -43,10 +39,6 @@ int receiveFrame(int fd, char* buffer)
 
         // check if incoming byte is frame starter flag
         if (bufferAux == FRAME_FLAG) {
-            end = clock();
-            cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-            //printf("First flag took %f seconds to find \n", cpu_time_used); 
-            start = clock();
             bufferAux = 0;
             *bufferPtr = FRAME_FLAG; 
             receivedFrameSize = 1;
@@ -62,7 +54,6 @@ int receiveFrame(int fd, char* buffer)
                     bufferPtr++;
                     *bufferPtr = bufferAux;
                 }
-                //printf("%X ", (u_int8_t)bufferAux);
                 if(bufferAux == FRAME_FLAG) {
                     if (receivedFrameSize == 2) {
                         receivedFrameSize = 1;
@@ -72,10 +63,6 @@ int receiveFrame(int fd, char* buffer)
 
                     *bufferPtr = bufferAux;
                     bufferPtr++;
-                    //read(fd, &bufferAux, 1);
-                    end = clock();
-                    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-                    //printf("Second flag took %f seconds to find \n", cpu_time_used); 
                     break;
                 } 
             }        
@@ -372,9 +359,6 @@ int llread(int fd, char* buffer)
             receivedFrameSize -= 2;
 
             char frame[packetSize + 50];
-            clock_t start, end;
-            double cpu_time_used;   
-            start = clock();
 
             char bcc2 = destuffing(bufferAuxPtr, &receivedFrameSize, frame, buffer);
 
@@ -398,8 +382,6 @@ int llread(int fd, char* buffer)
             if (unBuildFrame(frame, receivedFrameSize, buffer, bcc2) == -1)
                 error = 1;
 
-            end = clock();
-            cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
             //printf("Frame took %f seconds to process \n", cpu_time_used); 
            
             if (error) {
@@ -437,11 +419,6 @@ int llwrite(int fd, char* buffer, int length)
     int frameLength = (packetSize + 8) * 2; // address, control, BCC1 and BCC2
     char frame[frameLength];
 
-    clock_t start, end;
-    double cpu_time_used;
-     
-    start = clock();
-
     if(!buildFrame(buffer, &length, sentFrameIndex, frame)) {
         printError("Failed to build frame! \n");
         exit(-1);
@@ -449,10 +426,6 @@ int llwrite(int fd, char* buffer, int length)
 
     // insert flags
     bytesWritten = writeFrameWithFlags(fd, frame, length);
-
-    end = clock();
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    //printf("Frame took %f seconds to send \n", cpu_time_used); 
 
     //TEST
     //sleep(1);
