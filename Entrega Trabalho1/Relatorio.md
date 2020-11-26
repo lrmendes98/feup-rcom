@@ -267,13 +267,13 @@ Na tabela apresentada faz-se variar o tamanho do pacote em bytes e os resultados
 
 |Tamanho do pacote ->| 100 B         | 1000 B       | 4000 B       | 5000 B        | 10000 B      | 100000 B
 | :----------------- | :-----------: | -----------: | -----------: | ------------: | -----------: | -----------: |
-|  5MB.zip           | 4.652s        | 2.661s       | 2.525s       |  2.965s       |  3.354s      | 3.563s       |
-| 10MB.zip           | 9.648s        | 5.537s       | 5.001s       |  5.742s       |  7.313s      | 7.355s       |
-| 20MB.zip           | 19.053s       | 11.071s      | 10.119s      |  11.449s      | 14.411s      | 14.224s      |
+|  5MB.zip           | 4.552s        | 2.561s       | 2.425s       |  2.865s       |  3.254s      | 3.463s       |
+| 10MB.zip           | 9.448s        | 5.337s       | 4.863s       |  5.542s       |  7.113s      | 7.155s       |
+| 20MB.zip           | 18.553s       | 10.571s      | 9.748s       |  10.949s      | 13.911s      | 13.724s      |
 
 
 ## Conclusões
 
-Após a conclusão dos testes efetuados, pode-se verificar que o valor ótimo de tamanho de pacote se encontra entre 1000 bytes e 4000 bytes. Utilizando este valor, concluí-se que a velocidade aproximada da nossa aplicação é de 1.98 MB/s ou 15.8 Mb/s.  
+Após a conclusão dos testes efetuados, pode-se verificar que o valor ótimo de tamanho de pacote se encontra entre 1000 bytes e 4000 bytes. Utilizando este valor, concluí-se que a velocidade aproximada da nossa aplicação é de 2.05 MB/s ou 16.4 Mb/s.  
 
 Com este trabalho, expandímos o domínio sobre matérias como operações ao nivel de bits, comunicação entre portas série, protocolos de redes e melhoramento de eficiência de código alterando o processo de alocação de memória a variáveis.
