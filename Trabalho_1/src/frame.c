@@ -35,8 +35,6 @@ int writeFrameWithFlags(int fd, char frame[], int frameLength)
     //send frame
     writtenSize += write(fd, frame, frameLength);
     writtenSize += write(fd, &flag, 1);
-    
-    //printf("Bytes written = %d\n", writtenSize);
 
     if (ENABLE_CURRUPT_FRAME_TESTS) {
         frame[frameLength - 2] = currentBcc2;
@@ -98,13 +96,6 @@ int getFrameIndex(char frame[])
 
 int buildFrame(char* packet, int* packetLength, int index, char* frame)
 {
-    if ((packet == NULL) || (*packetLength <= 0) || (frame == NULL) || 
-        (index & ~1))
-    {
-        printError("wth are you doing men... \n");
-        exit(-1);
-    }
-
     // insert address
     frame[0] = FRAME_ADDRESS_FIELD_TYPE1;
 
@@ -118,20 +109,11 @@ int buildFrame(char* packet, int* packetLength, int index, char* frame)
 
     stuffing(packet, packetLength, frame);
 
-    //printf("bcc2: %X\n", bcc2);
-
     return 1;
 }
 
 int unBuildFrame(char* frame, int frameLength, char* outputPacket, char bcc2)
-{
-    if ((frame == NULL) || (frameLength <= 0) || (outputPacket == NULL)) {
-        printError("wth are you doing men... \n");
-        exit(-1);
-    }
-
-    //u_int8_t addressField = frame[0];
-    
+{    
     u_int8_t bcc1 = frame[2]; 
 
     // check if bcc is correct
@@ -143,12 +125,9 @@ int unBuildFrame(char* frame, int frameLength, char* outputPacket, char bcc2)
     }
     
     char correctBcc2 = frame[frameLength - 1];
-
-    //printf("%X\n", (uint8_t)bcc2);
     
     if (correctBcc2 != bcc2) {
         printError("Incorrect bcc2! \n");
-        //printf("%X\n", (uint8_t)correctBcc2);
         return -1;
     }    
 

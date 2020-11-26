@@ -73,14 +73,6 @@ int receiveFrame(int fd, char* buffer)
             continue;
     }
 
-    //printFrame(buffer, 5);
-
-    // if (checkIfIsFrame(buffer, FRAME_REJ0, 0)) {
-    //     printf("is the samee!\n");
-    // }
-    // else 
-    //     printf("Not the same! \n");
-
     return receivedFrameSize;
 }
 
@@ -227,7 +219,6 @@ int llopenTransmitter(int fd)
         if (retval != 0 && retval != -1 && fds[0].revents == POLLIN) {
             readSize = read(fd, &buffer, FRAME_SUPERVISION_SIZE);
             if (checkIfIsFrame(buffer, FRAME_UA, 0)) {
-                //printSuccess("Received UA! \n");
                 return 1;
             }
             else if (checkIfIsFrame(buffer, FRAME_REJ0, 0)) {
@@ -235,9 +226,7 @@ int llopenTransmitter(int fd)
                 return -1;
             }
             else {
-                // printFrame(buffer, FRAME_SUPERVISION_SIZE);
                 readSize = 0;
-                // printError("Didn't recognize frame! \n");
             }
         }
         
@@ -318,7 +307,6 @@ int llopen(char* porta, int mode)
 int llclose(int fd)
 {
     setOldPortAttributes(fd); 
-
     return 0;
 }
 
@@ -341,14 +329,12 @@ int llread(int fd, char* buffer)
         if (readTimeout < 2)
             readTimeout = 2;
         alarm(10);
-        //printf("%i\n", readTimeout);
         receivedFrameSize = receiveFrame(fd, bufferAux);
         alarm(0);
 
         if (receivedFrameSize != -1) {
-			if (receivedFrameSize == 0) {
+			if (receivedFrameSize == 0)
 				continue;
-			}
 
             if (receivedFrameSize <= 5)
                 continue;
@@ -382,8 +368,6 @@ int llread(int fd, char* buffer)
             if (unBuildFrame(frame, receivedFrameSize, buffer, bcc2) == -1)
                 error = 1;
 
-            //printf("Frame took %f seconds to process \n", cpu_time_used); 
-           
             if (error) {
                 error = 0;
                 if (index == 0) 
@@ -465,7 +449,6 @@ int llwrite(int fd, char* buffer, int length)
             if (checkIfIsFrame(responseBuffer, FRAME_RR0, 0) ||
                 checkIfIsFrame(responseBuffer, FRAME_RR1, 0)) 
             {
-                //printSuccess("Received RR\n");
                 break;
             }
             else if (checkIfIsFrame(responseBuffer, FRAME_REJ0, 0) ||
