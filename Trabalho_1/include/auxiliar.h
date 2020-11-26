@@ -9,7 +9,6 @@
 #include <termios.h>
 
 
-
 char* stringAdd(const char *s1, const char *s2);
 
 long getFileBinary(char *path, char** buffer);

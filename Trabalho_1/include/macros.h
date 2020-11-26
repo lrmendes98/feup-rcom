@@ -7,6 +7,9 @@ extern int maxTries;
 //#define BAUDRATE B57600
 #define BAUDRATE B115200
 
+#define ENABLE_CURRUPT_FRAME_TESTS 0
+#define ENABLE_DESYNC_FRAME_TESTS 0
+
 #define RECEIVER 0
 #define TRANSMITTER 1
 

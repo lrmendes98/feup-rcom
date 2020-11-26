@@ -185,8 +185,8 @@ int llcloseReceiver(int fd)
 {
     printWarning("Disconnecting . . .\n");
 
-    int close = 0;
-    while(!close) {
+    int closeLoop = 0;
+    while(!closeLoop) {
         // Receive DISC
         char bufferAux[FRAME_SUPERVISION_SIZE];
         receiveFrame(fd, bufferAux);
@@ -201,6 +201,7 @@ int llcloseReceiver(int fd)
             if (checkIfIsFrame(bufferAux, FRAME_UA, 0)) {
                 close(fd);
                 printSuccess("Terminated with Success!\n\n");
+                closeLoop = 1;
                 return 0;
             }
         }
