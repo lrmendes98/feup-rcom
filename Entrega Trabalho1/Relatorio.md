@@ -7,20 +7,18 @@ Luís Ricardo Matos Mendes (up201604835)
 > (dois parágrafos: um sobre o contexto do trabalho; outro sobre as principais conclusões do relatório)
 
 Este trabalho aborda a comunicação entre dois computadores via porta série. A realização deste projeto consiste no desenvolvimento de um programa cujo ambiente de execução é um terminal em Linux.  
-Conclusões do relatório:
-
+Com este relatório foi possível analisar a eficiência do nosso protocolo
 
 ## Introdução
+
  > (indicação dos objectivos do trabalho e do relatório; descrição da lógica do relatório com indicações sobre o tipo de informação que poderá ser encontrada em cada uma secções seguintes)  
 
  O objetivo deste trabalho consiste em produzir uma aplicação cuja funcionalidade é executar a transferência de ficheiros entre um cliente e um servidor, conectados pela porta série. Esta aplicação tem de suportar interrupções de rede, corrupção de pacotes e a disconexão súbita do recetor.  
- > objetivo do relatorio???
-
- Nas secções que se seguem estará explícita a arquitetura do projeto, tanto como do código como da lógica do protocolo.
-
+ 
+ Neste relatório está explicado a nossa implementação em termos de arquitetura e de protocolo, assim como testes de eficiência no tratamento de erros e de disconexão.
+ 
 
 ## Arquitetura 
-> (blocos funcionais e interfaces)    
 
 O código está organizado em 5 diretórios diferentes. Os diretórios 'src' e 'include' contém os ficheiros de código fonte e os ficheiros de cabeçalho, respetivamente.
 No diretório 'obj' encontram-se os objetos resultantes da compilação e o próprio diretório é resultante da compilação do código. O diretório 'testFiles' contém os ficheiros utilizados para testar o protocolo e o 'copiedFiles' onde os ficheiros são recebidos depois do envio. O Makefile e os executáveis encontram-se na raíz da pasta.  
@@ -29,24 +27,15 @@ O nosso projeto é dividido em duas partes essenciais, a camada de aplicação (
 
 
 ## Estrutura do código
-> (APIs, principais estruturas de dados, principais funções e sua relação com a arquitetura)
 
-A camada de ligação contém as seguintes funções principais:
-- llopen
-- llread
-- llwrite  
+A camada de ligação contém as seguintes funções principais: llopen, llread, llwrite e llclose.  
 
 Também foram criadas as funções llopenReceiver, llopenTransmitter, llcloseTransmitter e llcloseReceiver. Estas executam o protocolo como descrito com as respetivas diferenças caso seja o cliente ou o servidor.  
 
-A camada de aplicação contém as seguintes funções principais:
-- appLayerWrite
-- appLayerRead  
+A camada de aplicação contém as seguintes funções principais: appLayerWrite, appLayerRead.  
 
 No ficheiro macros.h está defenido o Baudrate, as macros usadas para distinguir o modo do programa (transmissor ou recetor), as diversas constantes utilizadas nas tramas de supervisão para o campo de endereço, campo de controlo (SET, DISC, UA, RR, REJ) e os respetivos índices.  
 
-A camada de aplicação contém as seguintes funções principais:
-- appLayerWrite
-- appLayerRead
 
 ## Casos de uso principais
 
@@ -237,12 +226,54 @@ No llcloseReceiver, o recetor aguarda pela receção de uma trama de supervisão
 > (identificação dos principais aspectos funcionais; descrição da estratégia de implementação destes aspectos com apresentação de extractos de código)
 
 ## Validação
-> (descrição dos testes efectuados com apresentação quantificada dos resultados, se possível)
 
-## Eficiencia do protocolo de ligação de dados
-> (caraterização estatística da  eficiência do protocolo, feita com recurso a medidas sobre o código desenvolvido. A caracterização teórica de um protocolo Stop&Wait, que deverá ser usada como termo de comparação, encontra-se descrita nos slides de Ligação Lógica das aulas teóricas). 
+Para o teste de ocorrência de tramas corrompidas, no método writeFrameWithFlags mudamos o terceiro e o antepenúltimo byte da trama a 0, tudo a uma frequência aleatória, para testar a eficácia do bcc1 e bcc2. Estas alterações são feitas caso a macro  ENABLE_CURRUPT_FRAME_TESTS, localizada no ficheiro macros.h, estiver a 1. 
+```c
+   int res = rand() % 20;
+   if (res == 0) {
+      frame[2] = 0;
+   }
+   if (res == 1) {
+      frame[frameLength - 2] = 0;
+   }
+```
+Resultado:  
+![teste](imagens/outputTestes1.png)
+![teste](imagens/outputTestes2.png)  
+
+Para testar a ocorrência de um pacote dessincronizado alteramos o índice do campo de controlo a uma frequência aleatória, como o teste anterior. Este teste é executado quando as flags ENABLE_CURRUPT_FRAME_TESTS e ENABLE_DESYNC_FRAME_TESTS estiverem ambas a 1.
+```c
+   if (res == 2) {
+      if (frame[1] == FRAME_CONTROL_FIELD_SEND0) {
+         frame[1] = FRAME_CONTROL_FIELD_SEND1;
+      }
+      else {
+         frame[1] = FRAME_CONTROL_FIELD_SEND0;
+      }
+   }
+```
+
+Resultado:  
+![teste](imagens/outputTestes4.png)  
+![teste](imagens/outputTestes3.png)
+
+
+## Eficiência do protocolo de ligação de dados
+
+Para testar a rapidez do nosso protocolo utilizamos 3 ficheiros de seguintes tamanhos: 5MB, 10MB e 20MB. O tamanho real destes ficheiros varia ligeiramente do tamanho indicado.  
+Devido à impossibilidade de puder testar no laboratório (falha na conexão remota por ssh e portas série desativadas), os testes foram realizados utilizando portas virtuais geradas com o comando socat. Devido a essa razão, foi impossível fazer variar o baudrate pois o socat assume sempre o valor máximo apesar do que seja inserido como atributos da porta. 
+Para medir o tempo de execução foi utilizado o comando time e extraído o valor 'real'.  
+Na tabela apresentada faz-se variar o tamanho do pacote em bytes e os resultados são uma média de 10 execuções do programa.
+
+|Tamanho do pacote ->| 100 B         | 1000 B       | 4000 B       | 5000 B        | 10000 B      | 100000 B
+| :----------------- | :-----------: | -----------: | -----------: | ------------: | -----------: | -----------: |
+|  5MB.zip           | 4.652s        | 2.661s       | 2.525s       |  2.965s       |  3.354s      | 3.563s       |
+| 10MB.zip           | 9.648s        | 5.537s       | 5.001s       |  5.742s       |  7.313s      | 7.355s       |
+| 20MB.zip           | 19.053s       | 11.071s      | 10.119s      |  11.449s      | 14.411s      | 14.224s      |
+
 
 ## Conclusões
->(síntese da informação apresentada nas secções anteriores; reflexão sobre os objectivos de aprendizagem alcançados)
 
-## Anexo 1 , um zip com o código fonte
+Após a conclusão dos testes efetuados, pode-se verificar que o valor ótimo de tamanho de pacote se encontra entre 1000 bytes e 4000 bytes. Utilizando este valor, concluí-se que a velocidade aproximada da nossa aplicação é de 1.98 MB/s ou 15.8 Mb/s.  
+
+Com este trabalho, expandímos o domínio sobre matérias como operações ao nivel de bits, comunicação entre portas série, protocolos de redes e melhoramento de eficiência de código alterando o processo de alocação de memória a variáveis.
