@@ -172,6 +172,7 @@ int llcloseTransmitter(int fd)
 
     if (checkIfIsFrame(bufferAux, FRAME_DISC, 0)) {
         write(fd, FRAME_UA, FRAME_SUPERVISION_SIZE);
+        close(fd);
         printSuccess("Terminated with Success!\n\n");
 
         return 0;
@@ -198,6 +199,7 @@ int llcloseReceiver(int fd)
             receiveFrame(fd, bufferAux);
 
             if (checkIfIsFrame(bufferAux, FRAME_UA, 0)) {
+                close(fd);
                 printSuccess("Terminated with Success!\n\n");
                 return 0;
             }
@@ -305,10 +307,10 @@ int llopen(char* porta, int mode)
         return -1;
     }
 
-    // Set port attributes and save old ones
+    // Set port attributes
     portAttributesHandler(fd);
 
-    // instala rotina que atende interrupcao
+    // Instala rotina que atende interrupcao
     (void) signal(SIGALRM, atende);
 
     if (mode == RECEIVER) {
