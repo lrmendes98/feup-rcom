@@ -223,7 +223,70 @@ No llcloseReceiver, o recetor aguarda pela receção de uma trama de supervisão
 
 
 ## Protocolo de aplicação
-> (identificação dos principais aspectos funcionais; descrição da estratégia de implementação destes aspectos com apresentação de extractos de código)
+O protocolo de aplicação está dividido em duas funções principais: appLayerWrite e appLayerRead.
+
+A appLayerWrite começa por extrair todas as informações necessárias para processar e abrir o ficheiro. Começa por construir o pacote de controlo inicial, abrindo depois o ficheiro para começar a criar pacotes de informação. Por cada pacote, coloca os bytes de controlo num buffer e percorre o seu espaço correspondente no ficheiro, copiando toda a informação necessária até ter o tamanho requesitado. Por fim constroi e envia o pacote de controlo final.
+
+```c
+   char * initial_packet = buildControlPacket(2, &packet_size);
+    if (llwrite(fd, initial_packet, packet_size) == -1)
+        return -1;
+```
+
+```c
+   while(packet_size > 0) {
+        char * packet = buildDataPacket(filePtr_copy, fileName, packet_nr, &packet_size); 
+        if (packet_size == 0)
+            break;
+        packet_nr++;
+
+        if (llwrite(fd, packet, packet_size) == -1)
+            return -1;
+        free(packet);
+    }
+```
+
+```c
+   char * final_packet = buildControlPacket(3, &packet_size);
+    if (llwrite(fd, final_packet, packet_size) == -1)
+        return -1;
+```
+
+
+A appLayerRead recebe os pacotes e, dependendo do tipo, processa-os de maneiras diferentes. Quando recebe o pacote de controlo inicial, retira as informações necessárias e cria as estruturas de dados para guardar a informação. Ao receber um pacote de dados, processa os bytes de controlo e guarda a informação no espaço de memória já reservado.
+Por fim, quando deteta o pacote de controlo final, cria o ficheiro com os dados que tem guardados.
+
+```c
+   while(*packet != 3) {
+        // Read bytes
+        if (llread(fd, packet) == -1)
+            return -1;
+        
+        file_ptr = readPacket(packet, file_ptr);
+
+        if (packet_nr == 0) {
+            total_packets = (file_info.size / file_info.size_per_packet) + 3;
+        }
+        packet_nr++;
+        progressBar(packet_nr, total_packets);
+    }
+```
+
+```c
+   char* readPacket(char* packet, char* file_ptr) {
+      u_int8_t packet_type = *packet;
+      if(packet_type == 0x01) {
+         file_ptr = readDataPacket(packet, file_ptr);
+      }
+      else if(packet_type == 0x02) {
+         file_ptr = readStartPacket(packet, file_ptr);
+      }
+      else if(packet_type == 0x03) {
+         file_ptr = readEndPacket(packet, file_ptr);
+      }
+      return file_ptr;
+   }
+```
 
 ## Validação
 
