@@ -10,5 +10,13 @@ int main(int argc, char *argv[])
 {
     printf("Hello\n");
 
+    // Abrir uma TCP socket?
+
+    // Ligar ao servidor ftp ? 
+
+    // Descarregar o ficheiro ?
+
+    // Criar o ficheiro com o binario recebido ?
+
     return 0;
 }
