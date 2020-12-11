@@ -1,5 +1,110 @@
 #include "auxiliar.h"
 
+int print_response_code(char *responseCode, int responseCodeSize)
+{
+    if (responseCode == NULL || responseCodeSize <= 0)
+        return 1;
+
+    printf("< Response Code: ");
+    int iter = 0;
+    for (iter = 0; iter < responseCodeSize; iter++)
+        printf("%c", responseCode[iter]);
+    printf("\n");
+
+    return 0;
+}
+
+int get_server_response(int socketFileDiscriptor, char response[], int responseSize)
+{
+    char tempChar;
+    int responseIndex = 0;
+    while (responseIndex < responseSize)
+    {
+        if (!read(socketFileDiscriptor, &tempChar, 1))
+            return 1;
+
+        if (tempChar < '0' || tempChar > '9')
+            continue;
+        response[responseIndex] = tempChar;
+        responseIndex++;
+    }
+    return 0;
+}
+
+int open_and_connect_socket(int *socketFileDiscriptor, char *serverAdress, int serverPort, int checkResponseCode)
+{
+    struct sockaddr_in server_addr;
+
+    /*server address handling*/
+    bzero((char *)&server_addr, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = inet_addr(serverAdress); /*32 bit Internet address network byte ordered*/
+    server_addr.sin_port = htons(serverPort);              /*server TCP port must be network byte ordered */
+
+    /*open an TCP socket*/
+    if ((*socketFileDiscriptor = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        print_error("Error creating socket");
+        return 1;
+    }
+    /*connect to the server*/
+    print_warning("Connecting to server\n");
+    if (connect(*socketFileDiscriptor,
+                (struct sockaddr *)&server_addr,
+                sizeof(server_addr)) < 0)
+    {
+        print_error("Error connecting to server");
+        return 1;
+    }
+
+    if (checkResponseCode)
+    {
+        char responseCode[RESPONSE_CODE_SIZE];
+        /* Get server response after connecting and advance if positive */
+        if (get_server_response(*socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
+            return 1;
+        print_response_code(responseCode, RESPONSE_CODE_SIZE);
+
+        /* Check if connecting is ok*/
+        if (get_server_response(*socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
+        {
+            print_error("Error getting username response code\n");
+            return 1;
+        }
+        print_response_code(responseCode, RESPONSE_CODE_SIZE);
+    }
+
+    return 0;
+}
+
+int get_host_info(struct hostent **host, char *hostName)
+{
+    if (host == NULL)
+        return 1;
+
+    /*
+    struct hostent {
+        char *h_name;	    Official name of the host. 
+        char **h_aliases;   A NULL-terminated array of alternate names for the host. 
+        int h_addrtype;	    The type of address being returned; usually AF_INET.
+        int h_length;	    The length of the address in bytes.
+        char **h_addr_list;	A zero-terminated array of network addresses for the host. 
+                    Host addresses are in Network Byte Order. 
+    };
+
+    #define h_addr h_addr_list[0]	The first address in h_addr_list. 
+    */
+
+    *host = gethostbyname(hostName);
+    if (host == NULL)
+    {
+        herror("gethostbyname");
+        exit(-1);
+    }
+
+    return 0;
+}
+
 int parse_arguments(int argc, char *argv, char **username, char **password, char **host, char **filePath, char **fileName)
 {
     if (argc != 2)
@@ -10,8 +115,9 @@ int parse_arguments(int argc, char *argv, char **username, char **password, char
 
     /* 
         ftp://<username>:<password>@<host>/<url-filePath>
-        Exemplo: ftp://anonymous:1@speedtest.tele2.net/1KB.zip
-    */   
+        Exemplo: 
+        ftp://anonymous:1@speedtest.tele2.net/1KB.zip
+    */
 
     // Check if starting string "ftp://" is correct
     char *expectedStartingToken = "ftp://";
@@ -37,15 +143,15 @@ int parse_arguments(int argc, char *argv, char **username, char **password, char
 
     // Isolate filename
     char *iterator;
-    *fileName = NULL; //If value was not initially NULL, put it to NULL to make future error checking easier
+    *fileName = NULL;
     for (iterator = *filePath; *iterator != '\0'; iterator++)
-        if (*iterator == '/') //Find each instant of char '/' and only save the last one
+        if (*iterator == '/') // Find each instant of char '/' and only save the last one
             *fileName = iterator;
 
-    if (*fileName == NULL) //If no '/' is found than fileName is the same as filePath
+    if (*fileName == NULL) // If no '/' is found than fileName is the same as filePath
         *fileName = *filePath;
     else
-        (*fileName)++; // because of previous loop, fileName points to a '/' so we have to move it one character forward
+        (*fileName)++;
 
     // Check if values are acceptable. Tests are done in oposite order because fileName is more likely to be corrupted than username
     if (*fileName == NULL || *filePath == NULL || *host == NULL || *password == NULL || *username == NULL)
