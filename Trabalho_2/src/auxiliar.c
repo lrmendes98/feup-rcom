@@ -1,5 +1,65 @@
 #include "auxiliar.h"
 
+int send_credentials(int socketFileDiscriptor, char *userName, char *password)
+{
+    char responseCode[RESPONSE_CODE_SIZE];
+
+    // Send username
+    printf("> user %s\n", userName);
+    if (send_command(socketFileDiscriptor, "USER ", userName))
+    {
+        fprintf(stderr, "Error sending \'user\' command\n");
+        return 1;
+    }
+    if (get_server_response(socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
+    {
+        fprintf(stderr, "Error getting username response code\n");
+        return 1;
+    }
+    print_response_code(responseCode, RESPONSE_CODE_SIZE);
+    if (responseCode[0] != '3' && responseCode[0] != '2')
+    {
+        fprintf(stderr, "Unexpected response code at username\n");
+        return 1;
+    }
+
+    // Send password
+    printf("> pass %s\n", password);
+    if (send_command(socketFileDiscriptor, "PASS ", password))
+    {
+        fprintf(stderr, "Error sending \'pass\' command\n");
+        return 1;
+    }
+    if (get_server_response(socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
+    {
+        fprintf(stderr, "Error getting password response code\n");
+        return 1;
+    }
+    print_response_code(responseCode, RESPONSE_CODE_SIZE);
+    if (responseCode[0] != '2')
+    {
+        fprintf(stderr, "Unexpected response code at password\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+int send_command(int socketFileDiscriptor, char *command, char *argument)
+{
+    if (!write(socketFileDiscriptor, command, strlen(command)))
+        return 1;
+
+    if (argument != NULL)
+        if (!write(socketFileDiscriptor, argument, strlen(argument)))
+            return 1;
+
+    if (!write(socketFileDiscriptor, "\n", 1))
+        return 1;
+
+    return 0;
+}
+
 int print_response_code(char *responseCode, int responseCodeSize)
 {
     if (responseCode == NULL || responseCodeSize <= 0)
@@ -31,41 +91,41 @@ int get_server_response(int socketFileDiscriptor, char response[], int responseS
     return 0;
 }
 
-int open_and_connect_socket(int *socketFileDiscriptor, char *serverAdress, int serverPort, int checkResponseCode)
+int open_socket_and_connect_server(int *socketFileDiscriptor, char *serverAddress, int serverPort, int checkResponseCode)
 {
     struct sockaddr_in server_addr;
 
-    /*server address handling*/
     bzero((char *)&server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = inet_addr(serverAdress); /*32 bit Internet address network byte ordered*/
-    server_addr.sin_port = htons(serverPort);              /*server TCP port must be network byte ordered */
+    server_addr.sin_addr.s_addr = inet_addr(serverAddress); /*32 bit Internet address network byte ordered*/
+    server_addr.sin_port = htons(serverPort);               /*server TCP port must be network byte ordered */
 
-    /*open an TCP socket*/
+    /* open TCP socket */
     if ((*socketFileDiscriptor = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        print_error("Error creating socket");
+        print_error("Error creating socket!\n");
         return 1;
     }
-    /*connect to the server*/
+
+    /* connect to the server */
     print_warning("Connecting to server\n");
-    if (connect(*socketFileDiscriptor,
-                (struct sockaddr *)&server_addr,
+    if (connect(*socketFileDiscriptor, (struct sockaddr *)&server_addr,
                 sizeof(server_addr)) < 0)
     {
-        print_error("Error connecting to server");
+        print_error("Error connecting to server!\n");
         return 1;
     }
 
     if (checkResponseCode)
     {
         char responseCode[RESPONSE_CODE_SIZE];
-        /* Get server response after connecting and advance if positive */
+
         if (get_server_response(*socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
             return 1;
+
         print_response_code(responseCode, RESPONSE_CODE_SIZE);
 
-        /* Check if connecting is ok*/
+        /* ? */
         if (get_server_response(*socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
         {
             print_error("Error getting username response code\n");

@@ -27,17 +27,20 @@ int main(int argc, char *argv[])
 #endif
 
     /* Abrir uma TCP socket */
+    /* Ligar e comunicar com o servidor FTP */
     int serverSocket;
     char *serverIPAddress = inet_ntoa(*((struct in_addr *)host->h_addr));
-    if (open_and_connect_socket(&serverSocket, serverIPAddress, SERVER_FTP_PORT, TRUE))
+    if (open_socket_and_connect_server(&serverSocket, serverIPAddress, SERVER_FTP_PORT, TRUE))
     {
         print_error("Error openning and connecting to server socket\n");
         return 1;
     }
 
-    /* Ligar e comunicar com o servidor FTP */
-
     /* Mandar credenciais */
+    if(send_credentials(serverSocket, userName, password)) {
+        print_error("Error sending credentials\n");
+        exit(-1);
+    }
 
     /* Mudar para modo passivo */
 
