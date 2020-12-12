@@ -12,14 +12,14 @@ int main(int argc, char *argv[])
     char *fileName = NULL;
 
     if (parse_arguments(argc, argv[1], &userName, &password, &hostName, &filePath, &fileName))
-        return -1;
+        exit(-1);
 
     printf("UserName = %s\nPassword = %s\nHostName = %s\nFilePath = %s\nFileName = %s\n", userName, password, hostName, filePath, fileName);
 
     /* Get host information */
     struct hostent *host;
     if (get_host_info(&host, hostName))
-        return 1;
+        exit(-1);
 
 #ifdef DEBUG
     printf("Host name: %s\n", host->h_name);
@@ -33,24 +33,49 @@ int main(int argc, char *argv[])
     if (open_socket_and_connect_server(&serverSocket, serverIPAddress, SERVER_FTP_PORT, TRUE))
     {
         print_error("Error openning and connecting to server socket\n");
-        return 1;
+        exit(-1);
     }
 
     /* Mandar credenciais */
-    if(send_credentials(serverSocket, userName, password)) {
+    if (send_credentials(serverSocket, userName, password))
+    {
         print_error("Error sending credentials\n");
         exit(-1);
     }
 
     /* Mudar para modo passivo */
+    int filePort;
+    if (switch_passive_mode(serverSocket, &filePort))
+    {
+        print_error("Error switching to passive mode\n");
+        exit(-1);
+    }
 
     /* Open file socket */
+    int fileSocket;
+    if (open_socket_and_connect_server(&fileSocket, serverIPAddress, filePort, FALSE))
+    {
+        print_error("Error creating file socket\n");
+        return 1;
+    }
 
     /* Mandar retr command */
+    if (send_retrieve_command(serverSocket, filePath))
+    {
+        print_error("Error sending retrieve command\n");
+        return 1;
+    }
 
     /* Download binario e criar ficheiro */
+    if (receive_and_create_file(fileSocket, fileName))
+    {
+        print_error("Error getting file\n");
+        return 1;
+    }
 
     /* Fechar sockets e outras cenas */
+    close(fileSocket);
+    close(serverSocket);
 
     return 0;
 }

@@ -1,44 +1,174 @@
 #include "auxiliar.h"
 
-int send_credentials(int socketFileDiscriptor, char *userName, char *password)
+int receive_and_create_file(int socketFileDiscriptor, char *fileName)
+{
+    FILE *file = fopen(fileName, "w+");
+    if (file == NULL)
+        return 1;
+
+    char buffer;
+    while (read(socketFileDiscriptor, &buffer, 1))
+        fwrite(&buffer, sizeof(buffer), 1, file);
+
+    if (fclose(file))
+        return 1;
+
+    print_success("Finished file Download\n\n");
+
+    return 0;
+}
+
+int send_retrieve_command(int socketFileDiscriptor, char *filePath)
 {
     char responseCode[RESPONSE_CODE_SIZE];
 
-    // Send username
-    printf("> user %s\n", userName);
-    if (send_command(socketFileDiscriptor, "USER ", userName))
+    printf("> retr %s\n", filePath);
+    if (send_command(socketFileDiscriptor, "retr ", filePath))
     {
-        fprintf(stderr, "Error sending \'user\' command\n");
+        fprintf(stderr, "Error sending \'retr\' command\n");
         return 1;
     }
     if (get_server_response(socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
     {
-        fprintf(stderr, "Error getting username response code\n");
+        fprintf(stderr, "Error getting retrieve response code\n");
+        return 1;
+    }
+    print_response_code(responseCode, RESPONSE_CODE_SIZE);
+    if (responseCode[0] != '1')
+    {
+        fprintf(stderr, "Unexpected response code at retrieve\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+int get_port(int socketFileDiscriptor, int *port)
+{
+    int firstByte = 0;
+    int secoundByte = 0;
+    // Expected to read response like: Entering Passive Mode (90,130,70,73,86,26)'
+    char tempChar;
+    do
+    {
+        read(socketFileDiscriptor, &tempChar, 1);
+        putchar(tempChar);
+    } while (tempChar != '(');
+
+    int commaCounter = 0;
+    while (commaCounter != 4)
+    {
+        read(socketFileDiscriptor, &tempChar, 1);
+        putchar(tempChar);
+        if (tempChar == ',')
+            commaCounter++;
+    }
+
+    //Read the 3 chars of first byte
+    tempChar = 0;
+    int counter; // Keep track of how many chars have been read
+    for (counter = 0; counter < 4; counter++)
+    {
+        read(socketFileDiscriptor, &tempChar, 1);
+        putchar(tempChar);
+        if (tempChar == ',')
+            break;
+        firstByte *= 10;
+        firstByte += (tempChar - '0');
+    }
+
+    //Read the 3 chars of secound byte
+    tempChar = 0;
+    for (counter = 0; counter < 4; counter++)
+    {
+        read(socketFileDiscriptor, &tempChar, 1);
+        putchar(tempChar);
+        if (tempChar == ')')
+            break;
+        secoundByte *= 10;
+        secoundByte += (tempChar - '0');
+    }
+    putchar('\n');
+
+    *port = firstByte * 256 + secoundByte;
+
+    return 0;
+}
+
+int switch_passive_mode(int serverSocket, int *fileSocket)
+{
+    char responseCode[RESPONSE_CODE_SIZE];
+
+    printf("> pasv\n");
+    if (send_command(serverSocket, "pasv", NULL))
+    {
+        print_error("Error switching to passive mode\n");
+        return 1;
+    }
+
+    // Get response code
+    if (get_server_response(serverSocket, responseCode, RESPONSE_CODE_SIZE))
+    {
+        print_error("Error getting passive response code\n");
+        return 1;
+    }
+    print_response_code(responseCode, RESPONSE_CODE_SIZE);
+
+    if (responseCode[0] != '2')
+    {
+        print_error("Error switching to passive mode\n");
+        return 1;
+    }
+
+    // Get new port to passive receive file
+    if (get_port(serverSocket, fileSocket))
+    {
+        print_error("Error getting new port\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+int send_credentials(int socketFileDiscriptor, char *userName, char *password)
+{
+    char responseCode[RESPONSE_CODE_SIZE];
+
+    /* Send username */
+    printf("> user %s\n", userName);
+    if (send_command(socketFileDiscriptor, "USER ", userName))
+    {
+        print_error("Error sending USER command\n");
+        return 1;
+    }
+    if (get_server_response(socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
+    {
+        print_error("Error getting username response code\n");
         return 1;
     }
     print_response_code(responseCode, RESPONSE_CODE_SIZE);
     if (responseCode[0] != '3' && responseCode[0] != '2')
     {
-        fprintf(stderr, "Unexpected response code at username\n");
+        print_error("Unexpected response code at username\n");
         return 1;
     }
 
-    // Send password
+    /* Send password */
     printf("> pass %s\n", password);
     if (send_command(socketFileDiscriptor, "PASS ", password))
     {
-        fprintf(stderr, "Error sending \'pass\' command\n");
+        print_error("Error sending PASS command\n");
         return 1;
     }
     if (get_server_response(socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
     {
-        fprintf(stderr, "Error getting password response code\n");
+        print_error("Error getting password response code\n");
         return 1;
     }
     print_response_code(responseCode, RESPONSE_CODE_SIZE);
     if (responseCode[0] != '2')
     {
-        fprintf(stderr, "Unexpected response code at password\n");
+        print_error("Unexpected response code at password\n");
         return 1;
     }
 
@@ -120,17 +250,18 @@ int open_socket_and_connect_server(int *socketFileDiscriptor, char *serverAddres
     {
         char responseCode[RESPONSE_CODE_SIZE];
 
+        /* bug ? */
         if (get_server_response(*socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
             return 1;
 
         print_response_code(responseCode, RESPONSE_CODE_SIZE);
 
-        /* ? */
         if (get_server_response(*socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
         {
             print_error("Error getting username response code\n");
             return 1;
         }
+
         print_response_code(responseCode, RESPONSE_CODE_SIZE);
     }
 

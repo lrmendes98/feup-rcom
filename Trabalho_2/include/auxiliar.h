@@ -15,16 +15,24 @@
 #include <unistd.h>
 #include "macros.h"
 
-int send_credentials(int socketFileDiscriptor, char* userName, char* password);
+int receive_and_create_file(int socketFileDiscriptor, char *fileName);
 
-int send_command(int socketFileDiscriptor, char* command, char* argument);
+int send_retrieve_command(int socketFileDiscriptor, char *filePath);
+
+int get_port(int socketFileDiscriptor, int *port);
+
+int switch_passive_mode(int serverSocket, int *fileSocket);
+
+int send_credentials(int socketFileDiscriptor, char *userName, char *password);
+
+int send_command(int socketFileDiscriptor, char *command, char *argument);
 
 int print_response_code(char *responseCode, int responseCodeSize);
 
 int get_server_response(int socketFileDiscriptor, char response[], int responseSize);
 
 int open_socket_and_connect_server(int *socketFileDiscriptor, char *serverAddress,
-                            int serverPort, int checkResponseCode);
+                                   int serverPort, int checkResponseCode);
 
 int get_host_info(struct hostent **host, char *hostName);
 
