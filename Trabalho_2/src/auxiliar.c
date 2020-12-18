@@ -250,9 +250,9 @@ int open_socket_and_connect_server(int *socketFileDiscriptor, char *serverAddres
     {
         char responseCode[RESPONSE_CODE_SIZE];
 
-        /* bug ? */
-        if (get_server_response(*socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
-            return 1;
+        /* bug ? Diferences in response schema of diferent RFC's */
+        // if (get_server_response(*socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
+        //     return 1;
 
         print_response_code(responseCode, RESPONSE_CODE_SIZE);
 
@@ -320,14 +320,29 @@ int parse_arguments(int argc, char *argv, char **username, char **password, char
     }
     argv += expectedStartingTokenSize; //Move pointer to parse remaining information
 
-    // Parse username
-    *username = strtok(argv, ":");
+    // Check if has username and password
+    char *dpPointer = strchr(argv, ':');
+    if (dpPointer == NULL)
+    {
+        printf("is null\n");
+        *username = "anonymous";
+        *password = "1";
 
-    // Parse password
-    *password = strtok(NULL, "@");
+        // Parse host
+        *host = strtok(argv, "/");
+    }
+    else
+    {
+        // Parse username
+        *username = strtok(argv, ":");
 
-    // Parse host
-    *host = strtok(NULL, "/");
+        // Parse password
+        *password = strtok(NULL, "@");
+
+        // Parse host
+        *host = strtok(NULL, "/");
+        printf("%s", *host);
+    }
 
     // Parse filePath
     *filePath = strtok(NULL, "\0");
@@ -344,7 +359,6 @@ int parse_arguments(int argc, char *argv, char **username, char **password, char
     else
         (*fileName)++;
 
-    // Check if values are acceptable. Tests are done in oposite order because fileName is more likely to be corrupted than username
     if (*fileName == NULL || *filePath == NULL || *host == NULL || *password == NULL || *username == NULL)
     {
         print_error("Error parsing arguments\n");

@@ -14,17 +14,10 @@ int main(int argc, char *argv[])
     if (parse_arguments(argc, argv[1], &userName, &password, &hostName, &filePath, &fileName))
         exit(-1);
 
-    printf("UserName = %s\nPassword = %s\nHostName = %s\nFilePath = %s\nFileName = %s\n", userName, password, hostName, filePath, fileName);
-
     /* Get host information */
     struct hostent *host;
     if (get_host_info(&host, hostName))
         exit(-1);
-
-#ifdef DEBUG
-    printf("Host name: %s\n", host->h_name);
-    printf("IP Address: %s\n", inet_ntoa(*((struct in_addr *)host->h_addr)));
-#endif
 
     /* Abrir uma TCP socket */
     /* Ligar e comunicar com o servidor FTP */
