@@ -45,10 +45,11 @@ int send_retrieve_command(int socketFileDiscriptor, char *filePath)
 
 int get_port(int socketFileDiscriptor, int *port)
 {
+    // Expected to read response like: Entering Passive Mode (90,130,70,73,86,26)'
     int firstByte = 0;
     int secoundByte = 0;
-    // Expected to read response like: Entering Passive Mode (90,130,70,73,86,26)'
     char tempChar;
+
     do
     {
         read(socketFileDiscriptor, &tempChar, 1);
@@ -112,12 +113,29 @@ int switch_passive_mode(int serverSocket, int *fileSocket)
         print_error("Error getting passive response code\n");
         return 1;
     }
+
     print_response_code(responseCode, RESPONSE_CODE_SIZE);
 
     if (responseCode[0] != '2')
     {
         print_error("Error switching to passive mode\n");
         return 1;
+    }
+
+    /* 
+        Se receber uma quantidade absurda de texto, ignora e apenas va buscar a 
+        "Entering Passive Mode (90,130,70,73,86,26)" e segue para o get_port
+    */
+    if (responseCode[0] == '2' || responseCode[1] == '3')
+    {
+        char tempChar;
+
+        print_warning("hello\n");
+
+        while (read(serverSocket, &tempChar, 1))
+            printf("%c", tempChar);
+
+        exit(-1);
     }
 
     // Get new port to passive receive file
@@ -243,7 +261,7 @@ int open_socket_and_connect_server(int *socketFileDiscriptor, char *serverAddres
                 sizeof(server_addr)) < 0)
     {
         print_error("Error connecting to server!\n");
-        return 1;
+        exit(-1);
     }
 
     if (checkResponseCode)
