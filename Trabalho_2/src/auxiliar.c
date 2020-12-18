@@ -250,7 +250,7 @@ int open_socket_and_connect_server(int *socketFileDiscriptor, char *serverAddres
     {
         char responseCode[RESPONSE_CODE_SIZE];
 
-        /* bug ? Diferences in response schema of diferent RFC's */
+        /* bug ? Diferences in response schema of diferent RFC's of FTP implementation */
         // if (get_server_response(*socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
         //     return 1;
 
@@ -303,12 +303,6 @@ int parse_arguments(int argc, char *argv, char **username, char **password, char
         printf("Usage: \n\tftp://<user>:<password>@<host>/<url-filePath> \n\tOR \n\tftp://<host>/<url-filePath>\n");
         exit(-1);
     }
-
-    /* 
-        ftp://<username>:<password>@<host>/<url-filePath>
-        Exemplo: 
-        ftp://anonymous:1@speedtest.tele2.net/1KB.zip
-    */
 
     // Check if starting string "ftp://" is correct
     char *expectedStartingToken = "ftp://";
@@ -385,7 +379,7 @@ int exportFile(char *path, char **content)
     return 0;
 }
 
-char *stringAdd(const char *s1, const char *s2)
+char *string_add(const char *s1, const char *s2)
 {
     const size_t len1 = strlen(s1);
     const size_t len2 = strlen(s2);
@@ -398,21 +392,21 @@ char *stringAdd(const char *s1, const char *s2)
 
 char *print_error(char *msg)
 {
-    printf("%s", stringAdd("\033[1;31m", msg));
+    printf("%s", string_add("\033[1;31m", msg));
     printf("\033[0m"); // reset normal color
     return 0;
 }
 
 char *print_warning(char *msg)
 {
-    printf("%s", stringAdd("\033[1;33m", msg));
+    printf("%s", string_add("\033[1;33m", msg));
     printf("\033[0m"); // reset normal color
     return 0;
 }
 
 char *print_success(char *msg)
 {
-    printf("%s", stringAdd("\033[1;32m", msg));
+    printf("%s", string_add("\033[1;32m", msg));
     printf("\033[0m"); // reset normal color
     return 0;
 }

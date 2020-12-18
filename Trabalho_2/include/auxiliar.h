@@ -39,7 +39,7 @@ int get_host_info(struct hostent **host, char *hostName);
 int parse_arguments(int argc, char *argv, char **username, char **password,
                     char **host, char **filePath, char **fileName);
 
-char *stringAdd(const char *s1, const char *s2);
+char *string_add(const char *s1, const char *s2);
 
 char *print_error(char *msg);
 
