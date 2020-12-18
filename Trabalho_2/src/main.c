@@ -55,7 +55,8 @@ int main(int argc, char *argv[])
     /* Mandar retr command */
     if (send_retrieve_command(serverSocket, filePath))
     {
-        print_error("Error sending retrieve command\n");
+        print_error("Error sending retrieve command \n");
+        print_warning("File may not exist in FTP server\n");
         return 1;
     }
 

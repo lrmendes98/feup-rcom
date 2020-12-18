@@ -25,7 +25,7 @@ int send_retrieve_command(int socketFileDiscriptor, char *filePath)
     printf("> retr %s\n", filePath);
     if (send_command(socketFileDiscriptor, "retr ", filePath))
     {
-        fprintf(stderr, "Error sending \'retr\' command\n");
+        print_error("Error sending \'retr\' command\n");
         return 1;
     }
     if (get_server_response(socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
