@@ -300,7 +300,7 @@ int parse_arguments(int argc, char *argv, char **username, char **password, char
 {
     if (argc != 2)
     {
-        printf("Usage: ftp://<user>:<password>@<host>/<url-filePath>\n");
+        printf("Usage: \n\tftp://<user>:<password>@<host>/<url-filePath> \n\tOR \n\tftp://<host>/<url-filePath>\n");
         exit(-1);
     }
 
