@@ -126,16 +126,36 @@ int switch_passive_mode(int serverSocket, int *fileSocket)
         Se receber uma quantidade absurda de texto, ignora e apenas va buscar a 
         "Entering Passive Mode (90,130,70,73,86,26)" e segue para o get_port
     */
-    if (responseCode[0] == '2' || responseCode[1] == '3')
+    if (responseCode[0] == '2' && responseCode[1] == '3')
     {
-        char tempChar;
+        char *tempChar;
+        char messageBuffer[400000];
+        char *messageBufferPtr = &messageBuffer;
+        int newLineCounter = 0;
 
         print_warning("hello\n");
 
-        while (read(serverSocket, &tempChar, 1))
-            printf("%c", tempChar);
+        int counter = 0;
+        int close = 1;
+        while (close)
+        {
+            read(serverSocket, &tempChar, 1);
 
-        exit(-1);
+            if (tempChar == '2')
+            {
+                read(serverSocket, &tempChar, 1);
+                if (tempChar == '2')
+                {
+                    read(serverSocket, &tempChar, 1);
+                    if (tempChar == '7')
+                    {
+                        read(serverSocket, &tempChar, 1);
+                        read(serverSocket, &tempChar, 1);
+                        close = 0;
+                    }
+                }
+            }
+        }
     }
 
     // Get new port to passive receive file
