@@ -128,18 +128,16 @@ int switch_passive_mode(int serverSocket, int *fileSocket)
     */
     if (responseCode[0] == '2' && responseCode[1] == '3')
     {
-        char *tempChar;
-        char messageBuffer[400000];
-        char *messageBufferPtr = &messageBuffer;
-        int newLineCounter = 0;
-
-        print_warning("hello\n");
-
-        int counter = 0;
+        char tempChar;
+        //char *tempCharPtr = &tempChar;
+        //char *tempChar;
+        //char messageBuffer[400000];
         int close = 1;
+        
         while (close)
         {
             read(serverSocket, &tempChar, 1);
+            printf("%c", tempChar);
 
             if (tempChar == '2')
             {
