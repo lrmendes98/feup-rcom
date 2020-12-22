@@ -7,8 +7,7 @@ int main(int argc, char *argv[])
     printf("\n");
 
     /* Placeholder for parsed arguments */
-    struct LinkInfo linkInfo;
-    
+    struct LinkInfo linkInfo; 
     if (validate_and_parse_arguments(argc, argv[1], &linkInfo))
         exit(-1);
 

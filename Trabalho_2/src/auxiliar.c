@@ -305,7 +305,7 @@ int open_socket_and_connect_server(int *socketFileDescriptor, char *serverAddres
 
 int get_host(struct hostent **host, char *hostName)
 {
-    if (host == NULL)
+    if (*host == NULL)
         return 1;
 
     /*
@@ -322,9 +322,11 @@ int get_host(struct hostent **host, char *hostName)
     */
 
     *host = gethostbyname(hostName);
-    if (host == NULL)
+    
+    if (*host == NULL)
     {
         herror("gethostbyname");
+        print_error("Link is unreachable\n");
         exit(-1);
     }
 
