@@ -1,23 +1,20 @@
 #include "auxiliar.h"
 
+// #define DEBUG
+
 int main(int argc, char *argv[])
 {
     printf("\n");
 
     /* Placeholder for parsed arguments */
     struct LinkInfo linkInfo;
-    char *userName = NULL;
-    char *password = NULL;
-    char *hostName = NULL;
-    char *filePath = NULL;
-    char *fileName = NULL;
-
-    if (validate_and_parse_arguments(argc, argv[1], &userName, &password, &hostName, &filePath, &fileName))
+    
+    if (validate_and_parse_arguments(argc, argv[1], &linkInfo))
         exit(-1);
 
     /* Get host information */
     struct hostent *host;
-    if (get_host(&host, hostName))
+    if (get_host(&host, linkInfo.hostName))
         exit(-1);
 
     /* Abrir uma TCP socket */
@@ -32,7 +29,7 @@ int main(int argc, char *argv[])
     }
 
     /* Mandar credenciais */
-    if (send_credentials(serverSocket, userName, password))
+    if (send_credentials(serverSocket, linkInfo.userName, linkInfo.password))
     {
         print_error("Error sending credentials\n");
         exit(-1);
@@ -55,7 +52,7 @@ int main(int argc, char *argv[])
     }
 
     /* Mandar retr command */
-    if (send_retrieve_command(serverSocket, filePath))
+    if (send_retrieve_command(serverSocket, linkInfo.filePath))
     {
         print_error("Error sending retrieve command \n");
         print_warning("File may not exist in FTP server\n");
@@ -63,7 +60,7 @@ int main(int argc, char *argv[])
     }
 
     /* Download binario e criar ficheiro */
-    if (receive_and_create_file(fileSocket, fileName))
+    if (receive_and_create_file(fileSocket, linkInfo.filePath))
     {
         print_error("Error getting file\n");
         exit(-1);

@@ -331,11 +331,11 @@ int get_host(struct hostent **host, char *hostName)
     return 0;
 }
 
-int validate_and_parse_arguments(int argc, char *argv, char **username, char **password, char **host, char **filePath, char **fileName)
+int validate_and_parse_arguments(int argc, char *argv, struct LinkInfo *linkInfo)
 {
     if (argc != 2)
     {
-        printf("Usage: \n\tftp://<user>:<password>@<host>/<url-filePath> \n\tOR \n\tftp://<host>/<url-filePath>\n");
+        printf("Usage:  ftp://<user>:<password>@<host>/<filePath> \n\tftp://<host>/<filePath>\n");
         return 1;
     }
 
@@ -353,44 +353,26 @@ int validate_and_parse_arguments(int argc, char *argv, char **username, char **p
     char *dpPointer = strchr(argv, ':');
     if (dpPointer == NULL)
     {
-        *username = "anonymous";
-        *password = "1";
+        linkInfo->userName = "anonymous";
+        linkInfo->password = "1";
 
         // Parse host
-        *host = strtok(argv, "/");
+        linkInfo->hostName = strtok(argv, "/");
     }
     else
     {
         // Parse username
-        *username = strtok(argv, ":");
+        linkInfo->userName = strtok(argv, ":");
 
         // Parse password
-        *password = strtok(NULL, "@");
+        linkInfo->password = strtok(NULL, "@");
 
         // Parse host
-        *host = strtok(NULL, "/");
+        linkInfo->hostName = strtok(NULL, "/");
     }
 
     // Parse filePath
-    *filePath = strtok(NULL, "\0");
-
-    // Isolate filename
-    char *iterator;
-    *fileName = NULL;
-    for (iterator = *filePath; *iterator != '\0'; iterator++)
-        if (*iterator == '/') // Find each instant of char '/' and only save the last one
-            *fileName = iterator;
-
-    if (*fileName == NULL) // If no '/' is found than fileName is the same as filePath
-        *fileName = *filePath;
-    else
-        (*fileName)++;
-
-    if (*fileName == NULL || *filePath == NULL || *host == NULL || *password == NULL || *username == NULL)
-    {
-        print_error("Error parsing arguments\n");
-        return 1;
-    }
+    linkInfo->filePath = strtok(NULL, "\0");
 
     return 0;
 }

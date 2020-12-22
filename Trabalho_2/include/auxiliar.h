@@ -17,11 +17,10 @@
 
 struct LinkInfo
 {
-    char userName;
-    char password;
-    char hostName;
-    char filePath;
-    char fileName;
+    char *userName;
+    char *password;
+    char *hostName;
+    char *filePath;
 };
 
 int receive_and_create_file(int socketFileDescriptor, char *fileName);
@@ -45,8 +44,7 @@ int open_socket_and_connect_server(int *socketFileDescriptor, char *serverAddres
 
 int get_host(struct hostent **host, char *hostName);
 
-int validate_and_parse_arguments(int argc, char *argv, char **username, char **password,
-                    char **host, char **filePath, char **fileName);
+int validate_and_parse_arguments(int argc, char *argv, struct LinkInfo *linkInfo);
 
 char *string_add(const char *s1, const char *s2);
 
