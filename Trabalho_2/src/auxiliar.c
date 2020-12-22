@@ -308,26 +308,13 @@ int get_host(struct hostent **host, char *hostName)
     if (*host == NULL)
         return 1;
 
-    /*
-        struct hostent {
-            char *h_name;	    Official name of the host. 
-            char **h_aliases;   A NULL-terminated array of alternate names for the host. 
-            int h_addrtype;	    The type of address being returned; usually AF_INET.
-            int h_length;	    The length of the address in bytes.
-            char **h_addr_list;	A zero-terminated array of network addresses for the host. 
-            Host addresses are in Network Byte Order. 
-        };
-
-        #define h_addr h_addr_list[0]	The first address in h_addr_list. 
-    */
-
     *host = gethostbyname(hostName);
     
     if (*host == NULL)
     {
         herror("gethostbyname");
         print_error("Link is unreachable\n");
-        exit(-1);
+        return 1;
     }
 
     return 0;
@@ -357,23 +344,15 @@ int validate_and_parse_arguments(int argc, char *argv, struct LinkInfo *linkInfo
     {
         linkInfo->userName = "anonymous";
         linkInfo->password = "1";
-
-        // Parse host
         linkInfo->hostName = strtok(argv, "/");
     }
     else
     {
-        // Parse username
         linkInfo->userName = strtok(argv, ":");
-
-        // Parse password
         linkInfo->password = strtok(NULL, "@");
-
-        // Parse host
         linkInfo->hostName = strtok(NULL, "/");
     }
 
-    // Parse filePath
     linkInfo->filePath = strtok(NULL, "\0");
 
     return 0;

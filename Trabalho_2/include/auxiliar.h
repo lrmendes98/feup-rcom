@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include "macros.h"
 
+/* Placeholder for link parser information */
 struct LinkInfo
 {
     char *userName;
@@ -44,6 +45,10 @@ int open_socket_and_connect_server(int *socketFileDescriptor, char *serverAddres
 
 int get_host(struct hostent **host, char *hostName);
 
+/** Creates a file with received content (binary)
+ * @param path: New file path
+ * @param content: New file binary
+*/
 int validate_and_parse_arguments(int argc, char *argv, struct LinkInfo *linkInfo);
 
 char *string_add(const char *s1, const char *s2);
@@ -53,9 +58,3 @@ char *print_error(char *msg);
 char *print_warning(char *msg);
 
 char *print_success(char *msg);
-
-/** Creates a file with received content (binary)
- * @param path: New file path
- * @param content: New file binary
-*/
-int exportFile(char *path, char **content);
