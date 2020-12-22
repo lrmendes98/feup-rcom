@@ -303,7 +303,7 @@ int open_socket_and_connect_server(int *socketFileDescriptor, char *serverAddres
     return 0;
 }
 
-int get_host_info(struct hostent **host, char *hostName)
+int get_host(struct hostent **host, char *hostName)
 {
     if (host == NULL)
         return 1;
@@ -331,7 +331,7 @@ int get_host_info(struct hostent **host, char *hostName)
     return 0;
 }
 
-int parse_arguments(int argc, char *argv, char **username, char **password, char **host, char **filePath, char **fileName)
+int validate_and_parse_arguments(int argc, char *argv, char **username, char **password, char **host, char **filePath, char **fileName)
 {
     if (argc != 2)
     {

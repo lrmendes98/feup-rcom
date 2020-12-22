@@ -5,18 +5,19 @@ int main(int argc, char *argv[])
     printf("\n");
 
     /* Placeholder for parsed arguments */
+    struct LinkInfo linkInfo;
     char *userName = NULL;
     char *password = NULL;
     char *hostName = NULL;
     char *filePath = NULL;
     char *fileName = NULL;
 
-    if (parse_arguments(argc, argv[1], &userName, &password, &hostName, &filePath, &fileName))
+    if (validate_and_parse_arguments(argc, argv[1], &userName, &password, &hostName, &filePath, &fileName))
         exit(-1);
 
     /* Get host information */
     struct hostent *host;
-    if (get_host_info(&host, hostName))
+    if (get_host(&host, hostName))
         exit(-1);
 
     /* Abrir uma TCP socket */
@@ -50,7 +51,7 @@ int main(int argc, char *argv[])
     if (open_socket_and_connect_server(&fileSocket, serverIPAddress, filePort, FALSE))
     {
         print_error("Error creating file socket\n");
-        return 1;
+        exit(-1);
     }
 
     /* Mandar retr command */
@@ -58,14 +59,14 @@ int main(int argc, char *argv[])
     {
         print_error("Error sending retrieve command \n");
         print_warning("File may not exist in FTP server\n");
-        return 1;
+        exit(-1);
     }
 
     /* Download binario e criar ficheiro */
     if (receive_and_create_file(fileSocket, fileName))
     {
         print_error("Error getting file\n");
-        return 1;
+        exit(-1);
     }
 
     /* Fechar FTP socket e file descriptor */
