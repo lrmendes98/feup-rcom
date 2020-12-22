@@ -1,13 +1,15 @@
 #include "auxiliar.h"
 
-int receive_and_create_file(int socketFileDiscriptor, char *fileName)
+int receive_and_create_file(int socketFileDescriptor, char *fileName)
 {
     FILE *file = fopen(fileName, "w+");
     if (file == NULL)
         return 1;
 
     char buffer;
-    while (read(socketFileDiscriptor, &buffer, 1))
+
+    /* Reads from socket byte to byte */
+    while (read(socketFileDescriptor, &buffer, 1))
         fwrite(&buffer, sizeof(buffer), 1, file);
 
     if (fclose(file))
@@ -18,48 +20,48 @@ int receive_and_create_file(int socketFileDiscriptor, char *fileName)
     return 0;
 }
 
-int send_retrieve_command(int socketFileDiscriptor, char *filePath)
+int send_retrieve_command(int socketFileDescriptor, char *filePath)
 {
     char responseCode[RESPONSE_CODE_SIZE];
 
     printf("> retr %s\n", filePath);
-    if (send_command(socketFileDiscriptor, "retr ", filePath))
+    if (send_command(socketFileDescriptor, "retr ", filePath))
     {
         print_error("Error sending \'retr\' command\n");
         return 1;
     }
-    if (get_server_response(socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
+    if (get_server_response(socketFileDescriptor, responseCode, RESPONSE_CODE_SIZE))
     {
-        fprintf(stderr, "Error getting retrieve response code\n");
+        print_error("Error getting retrieve response code\n");
         return 1;
     }
     print_response_code(responseCode, RESPONSE_CODE_SIZE);
     if (responseCode[0] != '1')
     {
-        fprintf(stderr, "Unexpected response code at retrieve\n");
+        print_error("Unexpected response code at retrieve\n");
         return 1;
     }
 
     return 0;
 }
 
-int get_port(int socketFileDiscriptor, int *port)
+int get_port(int socketFileDescriptor, int *port)
 {
-    // Expected to read response like: Entering Passive Mode (90,130,70,73,86,26)'
+    // Expected to read response: Entering Passive Mode (149,20,1,49,65,17)'
     int firstByte = 0;
-    int secoundByte = 0;
+    int secondByte = 0;
     char tempChar;
 
     do
     {
-        read(socketFileDiscriptor, &tempChar, 1);
+        read(socketFileDescriptor, &tempChar, 1);
         putchar(tempChar);
     } while (tempChar != '(');
 
     int commaCounter = 0;
     while (commaCounter != 4)
     {
-        read(socketFileDiscriptor, &tempChar, 1);
+        read(socketFileDescriptor, &tempChar, 1);
         putchar(tempChar);
         if (tempChar == ',')
             commaCounter++;
@@ -70,7 +72,7 @@ int get_port(int socketFileDiscriptor, int *port)
     int counter; // Keep track of how many chars have been read
     for (counter = 0; counter < 4; counter++)
     {
-        read(socketFileDiscriptor, &tempChar, 1);
+        read(socketFileDescriptor, &tempChar, 1);
         putchar(tempChar);
         if (tempChar == ',')
             break;
@@ -82,16 +84,16 @@ int get_port(int socketFileDiscriptor, int *port)
     tempChar = 0;
     for (counter = 0; counter < 4; counter++)
     {
-        read(socketFileDiscriptor, &tempChar, 1);
+        read(socketFileDescriptor, &tempChar, 1);
         putchar(tempChar);
         if (tempChar == ')')
             break;
-        secoundByte *= 10;
-        secoundByte += (tempChar - '0');
+        secondByte *= 10;
+        secondByte += (tempChar - '0');
     }
     putchar('\n');
 
-    *port = firstByte * 256 + secoundByte;
+    *port = firstByte * 256 + secondByte;
 
     return 0;
 }
@@ -129,15 +131,12 @@ int switch_passive_mode(int serverSocket, int *fileSocket)
     if (responseCode[0] == '2' && responseCode[1] == '3')
     {
         char tempChar;
-        //char *tempCharPtr = &tempChar;
-        //char *tempChar;
-        //char messageBuffer[400000];
         int close = 1;
-        
+
+        // Ignores all message codes until it catches a 227 char sequence
         while (close)
         {
             read(serverSocket, &tempChar, 1);
-            printf("%c", tempChar);
 
             if (tempChar == '2')
             {
@@ -148,7 +147,6 @@ int switch_passive_mode(int serverSocket, int *fileSocket)
                     if (tempChar == '7')
                     {
                         read(serverSocket, &tempChar, 1);
-                        read(serverSocket, &tempChar, 1);
                         close = 0;
                     }
                 }
@@ -156,7 +154,7 @@ int switch_passive_mode(int serverSocket, int *fileSocket)
         }
     }
 
-    // Get new port to passive receive file
+    // Get new port for passive receive file
     if (get_port(serverSocket, fileSocket))
     {
         print_error("Error getting new port\n");
@@ -166,18 +164,18 @@ int switch_passive_mode(int serverSocket, int *fileSocket)
     return 0;
 }
 
-int send_credentials(int socketFileDiscriptor, char *userName, char *password)
+int send_credentials(int socketFileDescriptor, char *userName, char *password)
 {
     char responseCode[RESPONSE_CODE_SIZE];
 
     /* Send username */
     printf("> user %s\n", userName);
-    if (send_command(socketFileDiscriptor, "USER ", userName))
+    if (send_command(socketFileDescriptor, "USER ", userName))
     {
         print_error("Error sending USER command\n");
         return 1;
     }
-    if (get_server_response(socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
+    if (get_server_response(socketFileDescriptor, responseCode, RESPONSE_CODE_SIZE))
     {
         print_error("Error getting username response code\n");
         return 1;
@@ -191,12 +189,12 @@ int send_credentials(int socketFileDiscriptor, char *userName, char *password)
 
     /* Send password */
     printf("> pass %s\n", password);
-    if (send_command(socketFileDiscriptor, "PASS ", password))
+    if (send_command(socketFileDescriptor, "PASS ", password))
     {
         print_error("Error sending PASS command\n");
         return 1;
     }
-    if (get_server_response(socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
+    if (get_server_response(socketFileDescriptor, responseCode, RESPONSE_CODE_SIZE))
     {
         print_error("Error getting password response code\n");
         return 1;
@@ -211,16 +209,16 @@ int send_credentials(int socketFileDiscriptor, char *userName, char *password)
     return 0;
 }
 
-int send_command(int socketFileDiscriptor, char *command, char *argument)
+int send_command(int socketFileDescriptor, char *command, char *argument)
 {
-    if (!write(socketFileDiscriptor, command, strlen(command)))
+    if (!write(socketFileDescriptor, command, strlen(command)))
         return 1;
 
     if (argument != NULL)
-        if (!write(socketFileDiscriptor, argument, strlen(argument)))
+        if (!write(socketFileDescriptor, argument, strlen(argument)))
             return 1;
 
-    if (!write(socketFileDiscriptor, "\n", 1))
+    if (!write(socketFileDescriptor, "\n", 1))
         return 1;
 
     return 0;
@@ -232,21 +230,22 @@ int print_response_code(char *responseCode, int responseCodeSize)
         return 1;
 
     printf("< Response Code: ");
-    int iter = 0;
-    for (iter = 0; iter < responseCodeSize; iter++)
-        printf("%c", responseCode[iter]);
+
+    for (int i = 0; i < responseCodeSize; i++)
+        printf("%c", responseCode[i]);
+
     printf("\n");
 
     return 0;
 }
 
-int get_server_response(int socketFileDiscriptor, char response[], int responseSize)
+int get_server_response(int socketFileDescriptor, char response[], int responseSize)
 {
     char tempChar;
     int responseIndex = 0;
     while (responseIndex < responseSize)
     {
-        if (!read(socketFileDiscriptor, &tempChar, 1))
+        if (!read(socketFileDescriptor, &tempChar, 1))
             return 1;
 
         if (tempChar < '0' || tempChar > '9')
@@ -257,7 +256,7 @@ int get_server_response(int socketFileDiscriptor, char response[], int responseS
     return 0;
 }
 
-int open_socket_and_connect_server(int *socketFileDiscriptor, char *serverAddress, int serverPort, int checkResponseCode)
+int open_socket_and_connect_server(int *socketFileDescriptor, char *serverAddress, int serverPort, int checkResponseCode)
 {
     struct sockaddr_in server_addr;
 
@@ -267,7 +266,7 @@ int open_socket_and_connect_server(int *socketFileDiscriptor, char *serverAddres
     server_addr.sin_port = htons(serverPort);               /*server TCP port must be network byte ordered */
 
     /* open TCP socket */
-    if ((*socketFileDiscriptor = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    if ((*socketFileDescriptor = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         print_error("Error creating socket!\n");
         return 1;
@@ -275,11 +274,11 @@ int open_socket_and_connect_server(int *socketFileDiscriptor, char *serverAddres
 
     /* connect to the server */
     print_warning("Connecting to server\n");
-    if (connect(*socketFileDiscriptor, (struct sockaddr *)&server_addr,
+    if (connect(*socketFileDescriptor, (struct sockaddr *)&server_addr,
                 sizeof(server_addr)) < 0)
     {
         print_error("Error connecting to server!\n");
-        exit(-1);
+        return 1;
     }
 
     if (checkResponseCode)
@@ -287,12 +286,12 @@ int open_socket_and_connect_server(int *socketFileDiscriptor, char *serverAddres
         char responseCode[RESPONSE_CODE_SIZE];
 
         /* bug ? Diferences in response schema of diferent RFC's of FTP implementation */
-        // if (get_server_response(*socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
+        // if (get_server_response(*socketFileDescriptor, responseCode, RESPONSE_CODE_SIZE))
         //     return 1;
 
-        print_response_code(responseCode, RESPONSE_CODE_SIZE);
+        // print_response_code(responseCode, RESPONSE_CODE_SIZE);
 
-        if (get_server_response(*socketFileDiscriptor, responseCode, RESPONSE_CODE_SIZE))
+        if (get_server_response(*socketFileDescriptor, responseCode, RESPONSE_CODE_SIZE))
         {
             print_error("Error getting username response code\n");
             return 1;
@@ -310,16 +309,16 @@ int get_host_info(struct hostent **host, char *hostName)
         return 1;
 
     /*
-    struct hostent {
-        char *h_name;	    Official name of the host. 
-        char **h_aliases;   A NULL-terminated array of alternate names for the host. 
-        int h_addrtype;	    The type of address being returned; usually AF_INET.
-        int h_length;	    The length of the address in bytes.
-        char **h_addr_list;	A zero-terminated array of network addresses for the host. 
-                    Host addresses are in Network Byte Order. 
-    };
+        struct hostent {
+            char *h_name;	    Official name of the host. 
+            char **h_aliases;   A NULL-terminated array of alternate names for the host. 
+            int h_addrtype;	    The type of address being returned; usually AF_INET.
+            int h_length;	    The length of the address in bytes.
+            char **h_addr_list;	A zero-terminated array of network addresses for the host. 
+            Host addresses are in Network Byte Order. 
+        };
 
-    #define h_addr h_addr_list[0]	The first address in h_addr_list. 
+        #define h_addr h_addr_list[0]	The first address in h_addr_list. 
     */
 
     *host = gethostbyname(hostName);
@@ -337,7 +336,7 @@ int parse_arguments(int argc, char *argv, char **username, char **password, char
     if (argc != 2)
     {
         printf("Usage: \n\tftp://<user>:<password>@<host>/<url-filePath> \n\tOR \n\tftp://<host>/<url-filePath>\n");
-        exit(-1);
+        return 1;
     }
 
     // Check if starting string "ftp://" is correct
@@ -345,16 +344,15 @@ int parse_arguments(int argc, char *argv, char **username, char **password, char
     int expectedStartingTokenSize = strlen(expectedStartingToken);
     if (strncmp(argv, expectedStartingToken, expectedStartingTokenSize))
     {
-        fprintf(stderr, "Starting token was not the expected one\n");
+        print_error("Starting token was not the expected one\n");
         return 1;
     }
-    argv += expectedStartingTokenSize; //Move pointer to parse remaining information
+    argv += expectedStartingTokenSize; // Move pointer to parse remaining information
 
     // Check if has username and password
     char *dpPointer = strchr(argv, ':');
     if (dpPointer == NULL)
     {
-        printf("is null\n");
         *username = "anonymous";
         *password = "1";
 
@@ -371,7 +369,6 @@ int parse_arguments(int argc, char *argv, char **username, char **password, char
 
         // Parse host
         *host = strtok(NULL, "/");
-        printf("%s", *host);
     }
 
     // Parse filePath
@@ -392,26 +389,9 @@ int parse_arguments(int argc, char *argv, char **username, char **password, char
     if (*fileName == NULL || *filePath == NULL || *host == NULL || *password == NULL || *username == NULL)
     {
         print_error("Error parsing arguments\n");
-        exit(-1);
-    }
-
-    return 0;
-}
-
-int exportFile(char *path, char **content)
-{
-    FILE *ptr_myfile;
-
-    ptr_myfile = fopen(path, "wb");
-    if (!ptr_myfile)
-    {
-        printf("Unable to open file!");
         return 1;
     }
 
-    fwrite(*content, sizeof(*content), 1, ptr_myfile);
-
-    fclose(ptr_myfile);
     return 0;
 }
 

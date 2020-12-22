@@ -23,7 +23,8 @@ int main(int argc, char *argv[])
     /* Ligar e comunicar com o servidor FTP */
     int serverSocket;
     char *serverIPAddress = inet_ntoa(*((struct in_addr *)host->h_addr));
-    if (open_socket_and_connect_server(&serverSocket, serverIPAddress, SERVER_FTP_PORT, TRUE))
+    if (open_socket_and_connect_server(&serverSocket,
+                                       serverIPAddress, FTP_PORT, TRUE))
     {
         print_error("Error openning and connecting to server socket\n");
         exit(-1);
@@ -67,7 +68,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    /* Fechar sockets e outras cenas */
+    /* Fechar FTP socket e file descriptor */
     close(fileSocket);
     close(serverSocket);
 
