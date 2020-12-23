@@ -1,7 +1,5 @@
 #include "auxiliar.h"
 
-// #define DEBUG
-
 int main(int argc, char *argv[])
 {
     printf("\n");

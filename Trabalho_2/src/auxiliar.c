@@ -9,8 +9,15 @@ int receive_and_create_file(int socketFileDescriptor, char *fileName)
     char buffer;
 
     /* Reads from socket byte to byte */
-    while (read(socketFileDescriptor, &buffer, 1))
+    int status = 1;
+    while (status) {
+        status = read(socketFileDescriptor, &buffer, 1);
+        if (status == -1) {
+            print_error("Error in file socket read\n");
+            return 1;
+        }
         fwrite(&buffer, sizeof(buffer), 1, file);
+    }
 
     if (fclose(file))
         return 1;
@@ -164,7 +171,7 @@ int switch_passive_mode(int serverSocket, int *fileSocket)
     return 0;
 }
 
-int send_credentials(int socketFileDescriptor, char *userName, char *password)
+int send_credentials(int socketFileDescriptor, char *userName, char *password) 
 {
     char responseCode[RESPONSE_CODE_SIZE];
 
@@ -309,7 +316,7 @@ int get_host(struct hostent **host, char *hostName)
         return 1;
 
     *host = gethostbyname(hostName);
-    
+
     if (*host == NULL)
     {
         herror("gethostbyname");
@@ -333,7 +340,7 @@ int validate_and_parse_arguments(int argc, char *argv, struct LinkInfo *linkInfo
     int expectedStartingTokenSize = strlen(expectedStartingToken);
     if (strncmp(argv, expectedStartingToken, expectedStartingTokenSize))
     {
-        print_error("Starting token was not the expected one\n");
+        print_error("Link is incorrect, must start with ftp://\n");
         return 1;
     }
     argv += expectedStartingTokenSize; // Move pointer to parse remaining information
@@ -354,6 +361,14 @@ int validate_and_parse_arguments(int argc, char *argv, struct LinkInfo *linkInfo
     }
 
     linkInfo->filePath = strtok(NULL, "\0");
+
+    /* Final check of parsed arguments */
+    if (linkInfo->userName == NULL || linkInfo->password == NULL || linkInfo->hostName == NULL ||
+        linkInfo->filePath == NULL)
+    {
+        print_error("Error parsing arguments, link may be incorrect\n");
+        return 1;
+    }
 
     return 0;
 }
