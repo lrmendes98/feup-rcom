@@ -13,9 +13,22 @@ Neste relatório está explicado a nossa implementação da aplicação, a sua a
 
 ## Aplicação download
 ### Arquitetura da aplicação
+A estrutura global da aplicação, no que diz respeito ao envio dos comandos, é semelhante à experiência do telnet no guião da primeira aula.  
+O primeiro passo é retirar a informação da ligação a partir do link inserido como argumento. O método validate_and_parse_arguments valida o número de argumentos inseridos e aloca para a struct LinkInfo o username, a password, o hostname e o filePath. Também lida com links sem username e password, nesse caso, o username e password enviados pelos comandos ao servidor ftp são "anonymous" e "1", respetivamente. Também lida com links mal construídos, retornando 1 caso algum elemento não exista ou a síntaxe do link esteja incorreta.  
+
+De seguida, com método get_host obtém-se a informação do host a partir do node do host fornecido no link. Caso a função gethostbyname falhe, o programa retorna erro.  
+
+De seguida, o programa abre uma socket TCP e connecta-se ao servidor. Esta socket é usada para o envio do user e da password (método send_credentials) e do comando pasv (método switch_passive_mode). Em ambos estes métodos, caso seja recebido um código de resposta diferente de 2xx e 3xx, o programa retorna com erro.  
+
+No switch_passive_mode, o programa aguarda por uma resposta com código 230 que contém a string, por exemplo: "Entering Passive Mode (149,20,1,49,65,17)", da qual se retira a nova porta dos dois últimos códigos com a lógica 65*256 + 17 (método get_port). Como nos métodos anteriores, caso receba um código diferente de 2xx e 3xx, o programa retorna erro.
+Com a porta recebida pela resposta do modo passivo, abre-se uma nova socket TCP associada ao endereço IP retirado pela gethostbyname.  
+
+Depois, envia-se o comando retrieve pela socket utilizada para o envio dos comandos e de seguida faz-se a leitura da nova socket criada para a receção do ficheiro (método receive_and_create_file).  Caso o servidor FTP retorne um código diferente de 1xx no envio do comando retr, o programa termina com erro, pois é provável que o ficheiro não exista no servidor. Caso o read da socket FTP falhe, o programa termina com erro. Durante a leitura da socket é feita a escrita dos bytes para o file descriptor do ficheiro criado na raíz do projeto.  
+
+Ao terminar, fecha-se as as duas sockets TCP criadas.
 
 
-### Relatório de um download com sucesso
+### Resultados de um download com sucesso
 
 ## Configuração da network e análise
 > Por cada experiência (1 a 7):  
