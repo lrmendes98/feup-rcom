@@ -10,9 +10,11 @@ int receive_and_create_file(int socketFileDescriptor, char *fileName)
 
     /* Reads from socket byte to byte */
     int status = 1;
-    while (status) {
+    while (status)
+    {
         status = read(socketFileDescriptor, &buffer, 1);
-        if (status == -1) {
+        if (status == -1)
+        {
             print_error("Error in file socket read\n");
             return 1;
         }
@@ -171,7 +173,7 @@ int switch_passive_mode(int serverSocket, int *fileSocket)
     return 0;
 }
 
-int send_credentials(int socketFileDescriptor, char *userName, char *password) 
+int send_credentials(int socketFileDescriptor, char *userName, char *password)
 {
     char responseCode[RESPONSE_CODE_SIZE];
 
@@ -359,16 +361,23 @@ int validate_and_parse_arguments(int argc, char *argv, struct LinkInfo *linkInfo
         linkInfo->password = strtok(NULL, "@");
         linkInfo->hostName = strtok(NULL, "/");
     }
-
     linkInfo->filePath = strtok(NULL, "\0");
 
-    /* Final check of parsed arguments */
-    if (linkInfo->userName == NULL || linkInfo->password == NULL || linkInfo->hostName == NULL ||
-        linkInfo->filePath == NULL)
-    {
-        print_error("Error parsing arguments, link may be incorrect\n");
-        return 1;
-    }
+    char *fnAux;
+    char *iterator;
+
+    /* Save the last instance of '/' */
+    for (iterator = linkInfo->filePath; *iterator != '\0'; iterator++)
+        if (*iterator == '/')
+            fnAux = iterator;
+
+    /* If no '/' is found than fileName == filePath */
+    if (fnAux == NULL)
+        fnAux = linkInfo->filePath;
+    else
+        (fnAux)++;
+
+    linkInfo->fileName = fnAux;
 
     return 0;
 }

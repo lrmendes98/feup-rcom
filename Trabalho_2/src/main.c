@@ -5,7 +5,7 @@ int main(int argc, char *argv[])
     printf("\n");
 
     /* Placeholder for parsed arguments */
-    struct LinkInfo linkInfo; 
+    struct LinkInfo linkInfo;
     if (validate_and_parse_arguments(argc, argv[1], &linkInfo))
         exit(-1);
 
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
     }
 
     /* Mandar retr command */
-    if (send_retrieve_command(serverSocket, linkInfo.filePath))
+    if (send_retrieve_command(serverSocket, linkInfo.fileName))
     {
         print_error("Error sending retrieve command \n");
         print_warning("File may not exist in FTP server\n");
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
     }
 
     /* Download binario e criar ficheiro */
-    if (receive_and_create_file(fileSocket, linkInfo.filePath))
+    if (receive_and_create_file(fileSocket, linkInfo.fileName))
     {
         print_error("Error getting file\n");
         exit(-1);

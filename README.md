@@ -11,6 +11,9 @@ ftp://rcom:rcom@netlab1.fe.up.pt/files/pic1.jpg
 ftp://rcom:rcom@netlab1.fe.up.pt/files/pic2.png  
 ftp://rcom:rcom@netlab1.fe.up.pt/files/crab.mp4  
 
+ftp://ftp.isc.org/isc/ls-lR.gz
+ftp://ftp.isc.org/welcome.msg
+
 
 ### test big files (must uncomment code lines at open_socket_and_connect_server)
 ftp://speedtest.tele2.net/1KB.zip

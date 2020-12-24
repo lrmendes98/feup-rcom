@@ -22,6 +22,7 @@ struct LinkInfo
     char *password;
     char *hostName;
     char *filePath;
+    char *fileName;
 };
 
 int receive_and_create_file(int socketFileDescriptor, char *fileName);
