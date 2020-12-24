@@ -28,11 +28,151 @@ Depois, envia-se o comando retrieve pela socket utilizada para o envio dos coman
 Ao terminar, fecha-se as as duas sockets TCP criadas.
 
 
+
+
 ### Resultados de um download com sucesso
 
 ## Configuração da network e análise
-> Por cada experiência (1 a 7):  
-Network architecture,  experiment objectives, main configuration commands  
-Analysis of the logs captured that are relevant for the learning objectives
+### Exp 1- Configure an IP Network
+Nesta experiência, foram criados novos endereços de ip nas interfaces de rede dos tuxes 3 e 4. Como os ips tinham a mesma mask (172.16.y0.0), era possível estabelecer a ligação entre ambos.
+
+- What are the ARP packets and what are they used for?
+> Os pacotes ARP contêm informações sobre endereços IP e MAC e servem para que um PC seja capaz de mapear endereços IP ao respetivo endereço físico, para depois ser capaz de estabelecer ligações.
+
+- What are the MAC and IP addresses of ARP packets and why?
+> Se o tux 3 necessitar do MAC address do tux 4, o 3 envia para o 4 um pacote ARP request. Este pacote tem:
+>- Sender MAC address: MAC do tux 3.
+>- Sender IP address: IP do tux 3.
+>- Target MAC address: Não preenchido(00:00:00_00:00:00 (00:00:00:00:00:00)).
+>- Target IP address: IP do tux 4.
+>
+> O 4, ao receber o pacote, guarda o mapeamento dos endereços do 3 e envia um ARP reply:
+>- Sender MAC address: MAC do tux 4.
+>- Sender IP address: IP do tux 4.
+>- Target MAC address: MAC do tux 3.
+>- Target IP address: IP do tux 3.
+>
+> Podendo assim o 3 guardar o mapeamento do 4.
+
+- What packets does the ping command generate?
+> O comando ping usa inicialmente pacotes ARP para mapear os endereços. Posteriormente, são usados pacotes ICMP para a comunicação entre os computadores.
+
+- What are the MAC and IP addresses of the ping packets?
+> Dando ping do tux 3 para o 4, o ping request tem:
+>- Sender MAC address: MAC do tux 3.
+>- Sender IP address: IP do tux 3.
+>- Target MAC address: MAC do tux 4.
+>- Target IP address: IP do tux 4.
+>
+> O ping reply tem:
+>- Sender MAC address: MAC do tux 4.
+>- Sender IP address: IP do tux 4.
+>- Target MAC address: MAC do tux 3.
+>- Target IP address: IP do tux 3.
+
+### Exp 2 – Implement two virtual LANs in a switch
+Nesta experiência foram criadas duas vlans, uma ligada aos tuxes 3 e 4 e outra ao 2. Depois desta experiência, apenas o foi possível estabelecer ligação do 3 com o 4.
+
+- How to configure vlany0?
+> Para configurar a vlan, apenas é necessário criá-la e atribuir-lhe as portas desejadas.
+
+- How many broadcast domains are there? 
+> Existe uma do tux 3 e do tux 4, já que estão na mesma vlan e conseguem estabelecer comunicação um com o outro. A vlan que contém o tux 2 também é um domínio de broadcast.   
+
+### Exp 3 – Configure a Router in Linux
+Nesta experiência o tux 4 foi configurado como um router. Para além de adicionar o tux 4 a ambas as vlans, foram adicionadas rotas para que ser possível ligar os tuxes 2 e 3.
+
+- What routes are there in the tuxes? What are their meaning?
+> Tux 2:
+>- Destination: 172.16.y1.0 Gateway: 172.16.y1.1
+>- Destination: 172.16.y0.0 Gateway: 172.16.y1.253
+> Tux 3:
+>- Destination: 172.16.y0.0 Gateway: 172.16.y0.1
+>- Destination: 172.16.y1.0 Gateway: 172.16.y1.254
+> Tux 4:
+>- Destination: 172.16.y0.0 Gateway: 172.16.y1.254
+>- Destination: 172.16.y1.0 Gateway: 172.16.y1.253
+>
+>Todas as rotas com destino 172.16.y0.0 ligam-se à vlan 0 e rotas com destino 172.16.y1.0 ligam-se à vlan 1.
+
+- What ARP messages, and associated MAC addresses, are observed and
+why?
+> Tal como já tinha acontecido, quando o ping é iniciado, o tux que recebeu precisa de saber o MAC address de quem o enviou. Para isso, envia um ARP request em modo broadcast e espera pela resposta.
+
+- What ICMP packets are observed and why? 
+> Depois desta experiência, observam-se ping request e ping reply. Isto é possível pois, com as novas rotas, pode estabelecer-se a ligação entre o 2 e o 3.
+
+- What are the IP and MAC addresses associated to ICMP packets and
+why? 
+> Os endereços associados aos packets os de destino e origem. Por exemplo, nos ping requests do tux 3 para o 2, os de destino são do 2 e os de origem são de 3, mesmo que passe pelo 4.
+
+
+### Exp 4 – Configure a Commercial Router and Implement NAT
+Nesta experiência foi adicionado um router à vlan 1. Desta forma o tux 2 e o tux 4 ligam-se diretamente ao router e o 3 tem de passar primeiro pelo 4. Depois da configuração do NAT, foi possível a ligação do tux 2 e 3 com o router do outro laboratório.
+
+- How to configure a static route in a commercial router?
+> Para que o router conseguisse chegar ao tux 3 através do 4, foi adicionada uma rota ao router com o comando: ip route 172.16.y0.0 255.255.255.0 172.16.y1.253, de maneira a poder chegar à vlan 1.
+
+- What are the paths followed by the packets in the experiments carried out
+and why?
+> O tux 3, para chegar ao router, tem de se ligar primeiro ao 4. Para o tux 2 chegar ao 3, liga-se ao 4, pois tem uma route definida, ligando-se depois ao 3. Se essa route for removida, o 2 redireciona automaticamente para o router, que depois redireciona para o tux 4 e o 4 para o 3.
+As restantes ligações são feitas dentro da mesma vlan, podendo ligar-se diretamente.
+
+- What does NAT do?
+> O NAT permite comunicações para o exterior da rede, fazendo-as sempre com mesmo IP. Permite assim uma maior segurança para os dispositivos conectados a essa rede.
+
+### Exp 5 – DNS
+Nesta experiência foi definido o DNS e testada a ligação à internet em todos os tuxes.
+
+- How to configure the DNS service at an host? 
+> O DNS é configurado usando o ficheiro resolv.conf, definindo o nome do servidor e o endereço IP.
+
+- What packets are exchanged by DNS and what information is transported?
+> Quando é fornecido um hostname, o é necessário enviar um pedido ao servidor para que seja retornado o endereço de IP. Por isso, os pacotes de DNS são para executar esse pedido e enviar a respetiva resposta com o endereço.
+
+### Exp 6 – TCP connections
+Nesta experiência foi usado a nossa aplicação de download, com a ligação à internet criada nas experiências.
+
+- How many TCP connections are opened by your ftp application?In what connection is transported the FTP control information?
+> São abertas duas conecções TCP. Uma para transmitir comandos FTP e receber as respetivas respostas. Depois de estar estabelecida a ligação é aberta outra para a recepção de pacotes do ficheiro e envio das respostas.
+
+- What are the phases of a TCP connection?
+> O protocolo TCP tem 3 fases:
+>- Estabelecimento da conecção
+>- Envio de pacotes de informação
+>- Encerramento da conecção
+
+- How does the ARQ TCP mechanism work? What are the relevant TCP
+fields?
+>- O ARQ consiste num sistema em que depois do servidor enviar um packet de informação, espera que o recetor retorne um packet de acknowledgment, tentando reenviar a informação ao fim de um timeout até a um determinado número de tentativas.
+
+- Is the throughput of a TCP data connections disturbed by the appearance
+of a second TCP connection? How?
+>- Embora o download continue a funcionar sem erros, a velocidade do mesmo diminui, uma vez que a taxa de transferência passa a estar distribuída pelas duas ligações.
 
 ## Conclusões
+
+Depois deste trabalho ficamos com uma melhor noção de como as conecções entre computadores são estabelecidas. Conceitos como ping, router, IP e MAC addresses, que já conheciamos, tornaram-se agora mais concretos.
+
+## Anexos
+
+![](logs/log1.jpg)
+Pings do tux23 para 172.16.20.254
+
+![](logs/log3.jpg)
+Pings do tux23 para 172.16.21.1
+
+![](logs/log4.jpg)
+Pings do tux23 para tux22 no tux24 eth0
+
+![](logs/log5.jpg)
+Pings do tux23 para tux24 no tux24 eth1
+
+![](logs/log6.jpg)
+Ping tux22 para tux23 sem route para 172.16.20.0
+
+![](logs/log7.jpg)
+Ping tux22 para tux23 sem route para 172.16.20.0 com accept_redirects
+
+![](logs/log8.jpg)
+Ping tux23 para google.com
