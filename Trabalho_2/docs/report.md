@@ -27,10 +27,9 @@ Depois, envia-se o comando retrieve pela socket utilizada para o envio dos coman
 
 Ao terminar, fecha-se as as duas sockets TCP criadas.
 
-
-
-
 ### Resultados de um download com sucesso
+![download](imagens/successful_download.png)
+
 
 ## Configuração da network e análise
 ### Exp 1- Configure an IP Network
@@ -74,21 +73,33 @@ Nesta experiência, foram criados novos endereços de ip nas interfaces de rede 
 Nesta experiência foram criadas duas vlans, uma ligada aos tuxes 3 e 4 e outra ao 2. Depois desta experiência, apenas o foi possível estabelecer ligação do 3 com o 4.
 
 - How to configure vlany0?
-> Para configurar a vlan, apenas é necessário criá-la e atribuir-lhe as portas desejadas.
+> Para configurar a vlan, apenas é necessário criá-la e atribuir-lhe as portas desejadas.  
+>- configure terminal  
+>- vlan 20  
+>- end  
+>
+> Passos para associar a porta 1 a vlan20
+>- configure terminal
+>- interface fastethernet 0/1
+>- switchport mode access
+>- switchport access vlan 20
+>- end
 
 - How many broadcast domains are there? 
 > Existe uma do tux 3 e do tux 4, já que estão na mesma vlan e conseguem estabelecer comunicação um com o outro. A vlan que contém o tux 2 também é um domínio de broadcast.   
 
 ### Exp 3 – Configure a Router in Linux
 Nesta experiência o tux 4 foi configurado como um router. Para além de adicionar o tux 4 a ambas as vlans, foram adicionadas rotas para que ser possível ligar os tuxes 2 e 3.
-
+>
 - What routes are there in the tuxes? What are their meaning?
 > Tux 2:
 >- Destination: 172.16.y1.0 Gateway: 172.16.y1.1
->- Destination: 172.16.y0.0 Gateway: 172.16.y1.253
+>- Destination: 172.16.y0.0 Gateway: 172.16.y1.253  
+>
 > Tux 3:
 >- Destination: 172.16.y0.0 Gateway: 172.16.y0.1
->- Destination: 172.16.y1.0 Gateway: 172.16.y1.254
+>- Destination: 172.16.y1.0 Gateway: 172.16.y1.254  
+>
 > Tux 4:
 >- Destination: 172.16.y0.0 Gateway: 172.16.y1.254
 >- Destination: 172.16.y1.0 Gateway: 172.16.y1.253
@@ -134,7 +145,7 @@ Nesta experiência foi definido o DNS e testada a ligação à internet em todos
 Nesta experiência foi usado a nossa aplicação de download, com a ligação à internet criada nas experiências.
 
 - How many TCP connections are opened by your ftp application?In what connection is transported the FTP control information?
-> São abertas duas conecções TCP. Uma para transmitir comandos FTP e receber as respetivas respostas. Depois de estar estabelecida a ligação é aberta outra para a recepção de pacotes do ficheiro e envio das respostas.
+> São abertas duas conecções TCP. Uma para transmitir comandos FTP e receber as respetivas respostas. Depois do envio do comando do modo passivo é aberta outra porta cujo número é obtido pelo cálculo dos bytes de resposta ao comando pasv. Esta socket serve para a recepção de pacotes do ficheiro e envio das respostas.
 
 - What are the phases of a TCP connection?
 > O protocolo TCP tem 3 fases:
@@ -151,28 +162,28 @@ of a second TCP connection? How?
 >- Embora o download continue a funcionar sem erros, a velocidade do mesmo diminui, uma vez que a taxa de transferência passa a estar distribuída pelas duas ligações.
 
 ## Conclusões
-
-Depois deste trabalho ficamos com uma melhor noção de como as conecções entre computadores são estabelecidas. Conceitos como ping, router, IP e MAC addresses, que já conheciamos, tornaram-se agora mais concretos.
+Depois deste trabalho ficamos com uma melhor noção de como as conecções entre computadores são estabelecidas assim como melhor conhecimento do funcionamento geral da internet. Conceitos como ping, router, IP e MAC addresses, TCP, masks, ARQ, DNS, alguns que já conheciamos, tornaram-se agora mais claros.
 
 ## Anexos
+O código está como pasta zip junto com a entrega do relatório.  
 
-![](logs/log1.jpg)
-Pings do tux23 para 172.16.20.254
+Pings do tux23 para 172.16.20.254  
+![](logs/log1.jpg)  
 
-![](logs/log3.jpg)
-Pings do tux23 para 172.16.21.1
+Pings do tux23 para 172.16.21.1  
+![](logs/log3.jpg)  
 
-![](logs/log4.jpg)
-Pings do tux23 para tux22 no tux24 eth0
+Pings do tux23 para tux22 no tux24 eth0  
+![](logs/log4.jpg)  
 
-![](logs/log5.jpg)
-Pings do tux23 para tux24 no tux24 eth1
+Pings do tux23 para tux24 no tux24 eth1  
+![](logs/log5.jpg)  
 
-![](logs/log6.jpg)
-Ping tux22 para tux23 sem route para 172.16.20.0
+Ping tux22 para tux23 sem route para 172.16.20.0  
+![](logs/log6.jpg)  
 
-![](logs/log7.jpg)
-Ping tux22 para tux23 sem route para 172.16.20.0 com accept_redirects
+Ping tux22 para tux23 sem route para 172.16.20.0 com accept_redirects  
+![](logs/log7.jpg)  
 
-![](logs/log8.jpg)
-Ping tux23 para google.com
+Ping tux23 para google.com  
+![](logs/log8.jpg)  
